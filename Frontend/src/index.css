@@ -1,68 +1,206 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import "tailwindcss";
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap');
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
+@layer base {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    /* Core Brand Colors */
+    --primary: 142 71% 45%; /* Fresh Green #22C55E */
+    --primary-foreground: 150 40% 8%;
+    
+    --secondary: 24 95% 53%; /* Muted Orange #FB923C */
+    --secondary-foreground: 150 40% 8%;
+    
+    --accent: 142 71% 45%; /* Fresh Green */
+    --accent-foreground: 150 40% 8%;
+    
+    /* Backgrounds */
+    --background: 40 20% 98%; /* Warm Off-White */
+    --foreground: 150 40% 8%; /* Dark text */
+    
+    /* Surfaces */
+    --card: 40 20% 100%;
+    --card-foreground: 150 40% 8%;
+    
+    --popover: 40 20% 100%;
+    --popover-foreground: 150 40% 8%;
+    
+    /* Text */
+    --muted: 40 10% 94%;
+    --muted-foreground: 40 5% 45%;
+    
+    /* UI Elements */
+    --border: 40 10% 88%;
+    --input: 40 10% 88%;
+    --ring: 142 71% 45%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --radius: 0.875rem;
+    
+    /* Hero Section - Original Palette */
+    --hero-dark: 160 45% 10%; /* Dark Moss Green #102A21 */
+    --hero-moss: 160 45% 15%;
+    --hero-aubergine: 280 65% 15%; /* Deep Aubergine #2A0F3D */
+    --hero-copper: 28 90% 45%; /* Warm Copper #B45309 */
+    --hero-primary: 40 33% 98%; /* Warm Ivory #FAFAF9 */
+    --hero-secondary: 40 5% 77%; /* Soft Clay Gray #C7C5C0 */
+    --hero-accent: 142 71% 45%; /* Fresh Green #22C55E */
+    --hero-orange: 24 95% 53%; /* Muted Orange #FB923C */
+    --hero-surface: 160 30% 12%;
+    --hero-border: 160 20% 20%;
+    
+    
+    /* Custom Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(142 71% 45%) 0%, hsl(24 95% 53%) 100%);
+    --gradient-glow: radial-gradient(ellipse at 50% 0%, hsl(142 71% 45% / 0.15) 0%, transparent 50%);
+    --gradient-hero: linear-gradient(135deg, hsl(160 45% 10%) 0%, hsl(280 65% 15%) 50%, hsl(160 45% 12%) 100%);
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(150 40% 8% / 0.03);
+    --shadow-md: 0 4px 6px -1px hsl(150 40% 8% / 0.05), 0 2px 4px -2px hsl(150 40% 8% / 0.03);
+    --shadow-lg: 0 10px 15px -3px hsl(150 40% 8% / 0.05), 0 4px 6px -4px hsl(150 40% 8% / 0.03);
+    --shadow-xl: 0 20px 25px -5px hsl(150 40% 8% / 0.05), 0 8px 10px -6px hsl(150 40% 8% / 0.03);
+    --shadow-card: 0 1px 3px 0 hsl(150 40% 8% / 0.04), 0 1px 2px -1px hsl(150 40% 8% / 0.04);
+    --shadow-card-hover: 0 10px 40px -10px hsl(142 71% 45% / 0.12), 0 4px 12px -2px hsl(150 40% 8% / 0.04);
+    --shadow-hero-glow: 0 0 60px -10px hsl(142 71% 45% / 0.3);
+    
+    /* Sidebar */
+    --sidebar-background: 40 20% 100%;
+    --sidebar-foreground: 150 40% 8%;
+    --sidebar-primary: 142 71% 45%;
+    --sidebar-primary-foreground: 150 40% 8%;
+    --sidebar-accent: 40 10% 94%;
+    --sidebar-accent-foreground: 150 40% 8%;
+    --sidebar-border: 40 10% 88%;
+    --sidebar-ring: 142 71% 45%;
   }
-  a:hover {
-    color: #747bff;
+
+  .dark {
+    --background: 150 40% 6%;
+    --foreground: 40 20% 98%;
+    --card: 150 40% 8%;
+    --card-foreground: 40 20% 98%;
+    --popover: 150 40% 8%;
+    --popover-foreground: 40 20% 98%;
+    --primary: 142 71% 50%;
+    --primary-foreground: 150 40% 6%;
+    --secondary: 24 95% 58%;
+    --secondary-foreground: 150 40% 6%;
+    --muted: 150 40% 12%;
+    --muted-foreground: 40 5% 65%;
+    --accent: 142 71% 50%;
+    --accent-foreground: 150 40% 6%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 150 40% 15%;
+    --input: 150 40% 15%;
+    --ring: 142 71% 50%;
   }
-  button {
-    background-color: #f9f9f9;
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+}
+
+@layer utilities {
+     .text-hero-secondary { color: hsl(var(--hero-secondary)); }
+  .text-hero-secondary\/70 { color: hsl(var(--hero-secondary) / 0.7); }
+  .text-hero-secondary\/60 { color: hsl(var(--hero-secondary) / 0.6); }
+  .text-hero-secondary\/50 { color: hsl(var(--hero-secondary) / 0.5); }
+  .text-hero-secondary\/40 { color: hsl(var(--hero-secondary) / 0.4); }
+  .text-gradient {
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    background-image: var(--gradient-primary);
+  }
+  
+  .bg-gradient-primary {
+    background-image: var(--gradient-primary);
+  }
+  
+  .bg-hero-gradient {
+    background: linear-gradient(135deg, hsl(160 45% 10%) 0%, hsl(280 65% 12%) 40%, hsl(160 45% 8%) 100%);
+  }
+  
+  .bg-hero-glow {
+    background-image: var(--gradient-hero);
+  }
+  
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  
+  .shadow-card-hover {
+    box-shadow: var(--shadow-card-hover);
+  }
+  
+  .shadow-hero-glow {
+    box-shadow: var(--shadow-hero-glow);
+  }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .animate-float-delayed {
+    animation: float 6s ease-in-out infinite;
+    animation-delay: 2s;
+  }
+  
+  .animate-pulse-subtle {
+    animation: pulse-subtle 3s ease-in-out infinite;
+  }
+  
+  /* Hero color utilities */
+  .bg-hero-dark { background-color: hsl(var(--hero-dark)); }
+  .bg-hero-surface { background-color: hsl(var(--hero-surface)); }
+  .bg-hero-moss { background-color: hsl(var(--hero-moss)); }
+  .bg-hero-aubergine { background-color: hsl(var(--hero-aubergine)); }
+  .bg-hero-copper { background-color: hsl(var(--hero-copper)); }
+  .bg-hero-accent { background-color: hsl(var(--hero-accent)); }
+  .text-hero-primary { color: hsl(var(--hero-primary)); }
+  .text-hero-secondary { color: hsl(var(--hero-secondary)); }
+  .text-hero-accent { color: hsl(var(--hero-accent)); }
+  .text-hero-copper { color: hsl(var(--hero-copper)); }
+  .border-hero-border { border-color: hsl(var(--hero-border)); }
+  .border-hero-accent { border-color: hsl(var(--hero-accent)); }
+  .border-hero-copper { border-color: hsl(var(--hero-copper)); }
+  .ring-hero-accent { --tw-ring-color: hsl(var(--hero-accent)); }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
   }
 }
