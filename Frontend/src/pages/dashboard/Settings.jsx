@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { User, Bell, Shield, Palette, Globe, Trash2, Camera, Link, AlertCircle, CheckCircle, Eye, EyeOff } from "lucide-react";
+import { User, Bell, Shield, Palette, Globe, Trash2, Camera, Link, AlertCircle, CheckCircle, Eye, EyeOff, MessageSquare, Flag, Headphones, Send } from "lucide-react";
 import { Button } from "../../components/dashboard-user/Button";
 import { cn } from "../../lib/utils";
 
@@ -41,6 +41,7 @@ const Settings = () => {
         { id: "notifications", label: "Notifications", icon: Bell },
         { id: "security", label: "Security", icon: Shield },
         { id: "appearance", label: "Appearance", icon: Palette },
+        { id: "support", label: "Support", icon: Headphones },
     ];
 
     const validateEmail = (email) => {
@@ -506,6 +507,190 @@ const Settings = () => {
                                             <option>French</option>
                                             <option>German</option>
                                         </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === "support" && (
+                        <div className="space-y-6">
+                            {/* Send Feedback */}
+                            <div className="bg-white rounded-2xl border border-gray-100 p-6">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+                                        <MessageSquare className="w-5 h-5 text-emerald-600" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-gray-900">Send Feedback</h3>
+                                        <p className="text-sm text-gray-500">Help us improve Clipperz</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Feedback Type</label>
+                                        <select
+                                            id="feedback-type"
+                                            className="w-full h-10 px-4 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                        >
+                                            <option value="feature">Feature Request</option>
+                                            <option value="improvement">Improvement Suggestion</option>
+                                            <option value="praise">Positive Feedback</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Your Feedback</label>
+                                        <textarea
+                                            id="feedback-message"
+                                            rows={4}
+                                            placeholder="Share your thoughts with us..."
+                                            className="w-full px-4 py-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                                        />
+                                    </div>
+                                    <div className="flex justify-end">
+                                        <button
+                                            onClick={() => {
+                                                const feedbackData = {
+                                                    type: document.getElementById('feedback-type')?.value,
+                                                    message: document.getElementById('feedback-message')?.value,
+                                                    submittedAt: new Date().toISOString(),
+                                                };
+                                                console.log('Feedback Submitted:', feedbackData);
+                                                alert('Thank you for your feedback!');
+                                            }}
+                                            className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-xl transition-colors"
+                                        >
+                                            <Send className="w-4 h-4" />
+                                            Send Feedback
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Report an Issue */}
+                            <div className="bg-white rounded-2xl border border-orange-200 p-6">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
+                                        <Flag className="w-5 h-5 text-orange-600" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-gray-900">Report an Issue</h3>
+                                        <p className="text-sm text-gray-500">Found a bug? Let us know</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Issue Category</label>
+                                        <select
+                                            id="issue-category"
+                                            className="w-full h-10 px-4 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                        >
+                                            <option value="bug">Bug / Error</option>
+                                            <option value="performance">Performance Issue</option>
+                                            <option value="ui">UI/UX Problem</option>
+                                            <option value="clip">Clip Generation Issue</option>
+                                            <option value="payment">Payment/Billing Issue</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Issue Title</label>
+                                        <input
+                                            id="issue-title"
+                                            type="text"
+                                            placeholder="Brief description of the issue"
+                                            className="w-full h-10 px-4 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Detailed Description</label>
+                                        <textarea
+                                            id="issue-description"
+                                            rows={4}
+                                            placeholder="Please describe the issue in detail. Include steps to reproduce if possible..."
+                                            className="w-full px-4 py-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+                                        />
+                                    </div>
+                                    <div className="flex justify-end">
+                                        <button
+                                            onClick={() => {
+                                                const reportData = {
+                                                    category: document.getElementById('issue-category')?.value,
+                                                    title: document.getElementById('issue-title')?.value,
+                                                    description: document.getElementById('issue-description')?.value,
+                                                    submittedAt: new Date().toISOString(),
+                                                };
+                                                console.log('Issue Report Submitted:', reportData);
+                                                alert('Report submitted! Our team will review it.');
+                                            }}
+                                            className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-xl transition-colors"
+                                        >
+                                            <Flag className="w-4 h-4" />
+                                            Submit Report
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Contact Team */}
+                            <div className="bg-white rounded-2xl border border-purple-200 p-6">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                                        <Headphones className="w-5 h-5 text-purple-600" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-gray-900">Contact Our Team</h3>
+                                        <p className="text-sm text-gray-500">Get in touch with support</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                                        <input
+                                            id="contact-subject"
+                                            type="text"
+                                            placeholder="What do you need help with?"
+                                            className="w-full h-10 px-4 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                                        <select
+                                            id="contact-priority"
+                                            className="w-full h-10 px-4 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        >
+                                            <option value="low">Low - General inquiry</option>
+                                            <option value="medium">Medium - Need assistance</option>
+                                            <option value="high">High - Urgent matter</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
+                                        <textarea
+                                            id="contact-message"
+                                            rows={4}
+                                            placeholder="How can we help you?"
+                                            className="w-full px-4 py-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                                        />
+                                    </div>
+                                    <div className="flex justify-end">
+                                        <button
+                                            onClick={() => {
+                                                const contactData = {
+                                                    subject: document.getElementById('contact-subject')?.value,
+                                                    priority: document.getElementById('contact-priority')?.value,
+                                                    message: document.getElementById('contact-message')?.value,
+                                                    submittedAt: new Date().toISOString(),
+                                                };
+                                                console.log('Contact Request Submitted:', contactData);
+                                                alert('Message sent! We\'ll get back to you soon.');
+                                            }}
+                                            className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-purple-500 hover:bg-purple-600 rounded-xl transition-colors"
+                                        >
+                                            <Send className="w-4 h-4" />
+                                            Send Message
+                                        </button>
                                     </div>
                                 </div>
                             </div>

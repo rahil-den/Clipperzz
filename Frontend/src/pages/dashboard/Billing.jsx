@@ -255,7 +255,17 @@ const Billing = () => {
                                     Cancel
                                 </button>
                                 <button
-                                    onClick={() => setShowUpdateModal(false)}
+                                    onClick={() => {
+                                        const cardData = {
+                                            cardNumber: cardNumber,
+                                            expiry: expiry,
+                                            cvv: cvv ? "***" : "",
+                                            updatedAt: new Date().toISOString(),
+                                        };
+                                        console.log("[Billing.jsx] Payment Method Updated:", cardData);
+                                        alert("Payment method updated successfully!");
+                                        setShowUpdateModal(false);
+                                    }}
                                     className="flex-1 py-3 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-2xl transition-colors"
                                 >
                                     Save Card
