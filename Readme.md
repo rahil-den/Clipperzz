@@ -212,4 +212,4 @@ Architecture locked. Features evolving.
 MIT License. See `LICENSE` for details.
 ---
 ## Contact
-For questions reach out to [rahil](mailto:demelcamino@gmail.com).
+For questions reach out to [rahil](mailto:demelcamino@gmail.com). 
