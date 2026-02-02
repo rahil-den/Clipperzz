@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, ArrowRight, Star } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Star, AlertCircle } from "lucide-react";
 
 const Login = () => {
     const navigate = useNavigate();
@@ -10,13 +10,63 @@ const Login = () => {
     });
     const [showPassword, setShowPassword] = useState(true);
     const [rememberMe, setRememberMe] = useState(false);
+    const [errors, setErrors] = useState({});
+    const [touched, setTouched] = useState({});
+
+    // Validation functions
+    const validateEmail = (email) => {
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!email) return "Email is required";
+        if (!emailRegex.test(email)) return "Please enter a valid email address";
+        return "";
+    };
+
+    const validatePassword = (password) => {
+        if (!password) return "Password is required";
+        if (password.length < 8) return "Password must be at least 8 characters";
+        return "";
+    };
+
+    // Validate on change
+    useEffect(() => {
+        const newErrors = {};
+        if (touched.email) {
+            const emailError = validateEmail(formData.email);
+            if (emailError) newErrors.email = emailError;
+        }
+        if (touched.password) {
+            const passwordError = validatePassword(formData.password);
+            if (passwordError) newErrors.password = passwordError;
+        }
+        setErrors(newErrors);
+    }, [formData, touched]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const handleBlur = (e) => {
+        setTouched({ ...touched, [e.target.name]: true });
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        // Touch all fields to show errors
+        setTouched({ email: true, password: true });
+
+        // Validate all fields
+        const emailError = validateEmail(formData.email);
+        const passwordError = validatePassword(formData.password);
+
+        if (emailError || passwordError) {
+            setErrors({
+                email: emailError,
+                password: passwordError,
+            });
+            return;
+        }
+
         console.log("[Login.jsx] Login Attempt:", {
             email: formData.email,
             password: "***hidden***",
@@ -132,10 +182,19 @@ const Login = () => {
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
+                                    onBlur={handleBlur}
                                     placeholder="you@example.com"
-                                    className="w-full h-11 px-4 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-                                    required
+                                    className={`w-full h-11 px-4 text-sm bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.email
+                                        ? "border-red-400 focus:ring-red-500/20 focus:border-red-500"
+                                        : "border-gray-200 focus:ring-emerald-500/20 focus:border-emerald-500"
+                                        }`}
                                 />
+                                {errors.email && (
+                                    <div className="flex items-center gap-1.5 mt-1.5 text-red-500">
+                                        <AlertCircle className="w-3.5 h-3.5" />
+                                        <span className="text-xs">{errors.email}</span>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Password */}
@@ -155,9 +214,12 @@ const Login = () => {
                                         name="password"
                                         value={formData.password}
                                         onChange={handleChange}
+                                        onBlur={handleBlur}
                                         placeholder="Enter your password"
-                                        className="w-full h-11 px-4 pr-11 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-                                        required
+                                        className={`w-full h-11 px-4 pr-11 text-sm bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.password
+                                                ? "border-red-400 focus:ring-red-500/20 focus:border-red-500"
+                                                : "border-gray-200 focus:ring-emerald-500/20 focus:border-emerald-500"
+                                            }`}
                                     />
                                     <button
                                         type="button"
@@ -167,6 +229,12 @@ const Login = () => {
                                         {showPassword ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                                     </button>
                                 </div>
+                                {errors.password && (
+                                    <div className="flex items-center gap-1.5 mt-1.5 text-red-500">
+                                        <AlertCircle className="w-3.5 h-3.5" />
+                                        <span className="text-xs">{errors.password}</span>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Remember Me */}

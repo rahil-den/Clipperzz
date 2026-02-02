@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Eye, EyeOff, ArrowRight, Star } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Star, AlertCircle, Check } from "lucide-react";
 
 const SignUp = () => {
     const [formData, setFormData] = useState({
@@ -11,13 +11,107 @@ const SignUp = () => {
     });
     const [showPassword, setShowPassword] = useState(true);
     const [showConfirmPassword, setShowConfirmPassword] = useState(true);
+    const [errors, setErrors] = useState({});
+    const [touched, setTouched] = useState({});
+
+    // Validation functions
+    const validateFullName = (name) => {
+        if (!name) return "Full name is required";
+        if (name.length < 2) return "Name must be at least 2 characters";
+        if (!/^[a-zA-Z\s]+$/.test(name)) return "Name can only contain letters and spaces";
+        return "";
+    };
+
+    const validateEmail = (email) => {
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!email) return "Email is required";
+        if (!emailRegex.test(email)) return "Please enter a valid email address";
+        return "";
+    };
+
+    const validatePassword = (password) => {
+        if (!password) return "Password is required";
+        if (password.length < 8) return "Password must be at least 8 characters";
+        if (!/[A-Z]/.test(password)) return "Password must contain at least one uppercase letter";
+        if (!/[a-z]/.test(password)) return "Password must contain at least one lowercase letter";
+        if (!/[0-9]/.test(password)) return "Password must contain at least one number";
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) return "Password must contain at least one special character";
+        return "";
+    };
+
+    const validateConfirmPassword = (confirmPassword, password) => {
+        if (!confirmPassword) return "Please confirm your password";
+        if (confirmPassword !== password) return "Passwords do not match";
+        return "";
+    };
+
+    // Password strength indicator
+    const getPasswordStrength = (password) => {
+        let strength = 0;
+        if (password.length >= 8) strength++;
+        if (/[A-Z]/.test(password)) strength++;
+        if (/[a-z]/.test(password)) strength++;
+        if (/[0-9]/.test(password)) strength++;
+        if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength++;
+        return strength;
+    };
+
+    const passwordStrength = getPasswordStrength(formData.password);
+    const strengthLabels = ["Very Weak", "Weak", "Fair", "Good", "Strong"];
+    const strengthColors = ["bg-red-500", "bg-orange-500", "bg-yellow-500", "bg-lime-500", "bg-emerald-500"];
+
+    // Validate on change
+    useEffect(() => {
+        const newErrors = {};
+        if (touched.fullName) {
+            const nameError = validateFullName(formData.fullName);
+            if (nameError) newErrors.fullName = nameError;
+        }
+        if (touched.email) {
+            const emailError = validateEmail(formData.email);
+            if (emailError) newErrors.email = emailError;
+        }
+        if (touched.password) {
+            const passwordError = validatePassword(formData.password);
+            if (passwordError) newErrors.password = passwordError;
+        }
+        if (touched.confirmPassword) {
+            const confirmError = validateConfirmPassword(formData.confirmPassword, formData.password);
+            if (confirmError) newErrors.confirmPassword = confirmError;
+        }
+        setErrors(newErrors);
+    }, [formData, touched]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const handleBlur = (e) => {
+        setTouched({ ...touched, [e.target.name]: true });
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        // Touch all fields to show errors
+        setTouched({ fullName: true, email: true, password: true, confirmPassword: true });
+
+        // Validate all fields
+        const nameError = validateFullName(formData.fullName);
+        const emailError = validateEmail(formData.email);
+        const passwordError = validatePassword(formData.password);
+        const confirmError = validateConfirmPassword(formData.confirmPassword, formData.password);
+
+        if (nameError || emailError || passwordError || confirmError) {
+            setErrors({
+                fullName: nameError,
+                email: emailError,
+                password: passwordError,
+                confirmPassword: confirmError,
+            });
+            return;
+        }
+
         console.log("[SignUp.jsx] Account Created:", {
             ...formData,
             password: "***hidden***",
@@ -131,10 +225,19 @@ const SignUp = () => {
                                     name="fullName"
                                     value={formData.fullName}
                                     onChange={handleChange}
+                                    onBlur={handleBlur}
                                     placeholder="John Doe"
-                                    className="w-full h-11 px-4 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-                                    required
+                                    className={`w-full h-11 px-4 text-sm bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.fullName
+                                            ? "border-red-400 focus:ring-red-500/20 focus:border-red-500"
+                                            : "border-gray-200 focus:ring-emerald-500/20 focus:border-emerald-500"
+                                        }`}
                                 />
+                                {errors.fullName && (
+                                    <div className="flex items-center gap-1.5 mt-1.5 text-red-500">
+                                        <AlertCircle className="w-3.5 h-3.5" />
+                                        <span className="text-xs">{errors.fullName}</span>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Email */}
@@ -145,10 +248,19 @@ const SignUp = () => {
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
+                                    onBlur={handleBlur}
                                     placeholder="you@example.com"
-                                    className="w-full h-11 px-4 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-                                    required
+                                    className={`w-full h-11 px-4 text-sm bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.email
+                                            ? "border-red-400 focus:ring-red-500/20 focus:border-red-500"
+                                            : "border-gray-200 focus:ring-emerald-500/20 focus:border-emerald-500"
+                                        }`}
                                 />
+                                {errors.email && (
+                                    <div className="flex items-center gap-1.5 mt-1.5 text-red-500">
+                                        <AlertCircle className="w-3.5 h-3.5" />
+                                        <span className="text-xs">{errors.email}</span>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Password */}
@@ -160,9 +272,12 @@ const SignUp = () => {
                                         name="password"
                                         value={formData.password}
                                         onChange={handleChange}
+                                        onBlur={handleBlur}
                                         placeholder="Create a strong password"
-                                        className="w-full h-11 px-4 pr-11 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-                                        required
+                                        className={`w-full h-11 px-4 pr-11 text-sm bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.password
+                                                ? "border-red-400 focus:ring-red-500/20 focus:border-red-500"
+                                                : "border-gray-200 focus:ring-emerald-500/20 focus:border-emerald-500"
+                                            }`}
                                     />
                                     <button
                                         type="button"
@@ -172,6 +287,29 @@ const SignUp = () => {
                                         {showPassword ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                                     </button>
                                 </div>
+                                {/* Password Strength Indicator */}
+                                {formData.password && (
+                                    <div className="mt-2">
+                                        <div className="flex gap-1 mb-1">
+                                            {[...Array(5)].map((_, i) => (
+                                                <div
+                                                    key={i}
+                                                    className={`h-1 flex-1 rounded-full transition-all ${i < passwordStrength ? strengthColors[passwordStrength - 1] : "bg-gray-200"
+                                                        }`}
+                                                />
+                                            ))}
+                                        </div>
+                                        <p className={`text-xs ${passwordStrength >= 4 ? "text-emerald-600" : passwordStrength >= 2 ? "text-yellow-600" : "text-red-500"}`}>
+                                            Password strength: {strengthLabels[passwordStrength - 1] || "Very Weak"}
+                                        </p>
+                                    </div>
+                                )}
+                                {errors.password && (
+                                    <div className="flex items-center gap-1.5 mt-1.5 text-red-500">
+                                        <AlertCircle className="w-3.5 h-3.5" />
+                                        <span className="text-xs">{errors.password}</span>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Confirm Password */}
@@ -183,9 +321,14 @@ const SignUp = () => {
                                         name="confirmPassword"
                                         value={formData.confirmPassword}
                                         onChange={handleChange}
+                                        onBlur={handleBlur}
                                         placeholder="Confirm your password"
-                                        className="w-full h-11 px-4 pr-11 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-                                        required
+                                        className={`w-full h-11 px-4 pr-11 text-sm bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.confirmPassword
+                                                ? "border-red-400 focus:ring-red-500/20 focus:border-red-500"
+                                                : formData.confirmPassword && formData.confirmPassword === formData.password
+                                                    ? "border-emerald-400 focus:ring-emerald-500/20 focus:border-emerald-500"
+                                                    : "border-gray-200 focus:ring-emerald-500/20 focus:border-emerald-500"
+                                            }`}
                                     />
                                     <button
                                         type="button"
@@ -195,6 +338,18 @@ const SignUp = () => {
                                         {showConfirmPassword ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                                     </button>
                                 </div>
+                                {formData.confirmPassword && formData.confirmPassword === formData.password && !errors.confirmPassword && (
+                                    <div className="flex items-center gap-1.5 mt-1.5 text-emerald-500">
+                                        <Check className="w-3.5 h-3.5" />
+                                        <span className="text-xs">Passwords match</span>
+                                    </div>
+                                )}
+                                {errors.confirmPassword && (
+                                    <div className="flex items-center gap-1.5 mt-1.5 text-red-500">
+                                        <AlertCircle className="w-3.5 h-3.5" />
+                                        <span className="text-xs">{errors.confirmPassword}</span>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Submit Button */}
