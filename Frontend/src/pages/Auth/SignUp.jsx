@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, ArrowRight, Star, AlertCircle, Check } from "lucide-react";
 
 const SignUp = () => {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         fullName: "",
         email: "",
@@ -93,6 +94,15 @@ const SignUp = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
+        // Log form data to console on button click
+        console.log("[SignUp.jsx] Form Submitted:", {
+            fullName: formData.fullName,
+            email: formData.email,
+            password: formData.password,
+            confirmPassword: formData.confirmPassword,
+            submittedAt: new Date().toISOString(),
+        });
+
         // Touch all fields to show errors
         setTouched({ fullName: true, email: true, password: true, confirmPassword: true });
 
@@ -118,7 +128,9 @@ const SignUp = () => {
             confirmPassword: "***hidden***",
             createdAt: new Date().toISOString(),
         });
-        alert("Account created successfully! Check console for details.");
+
+        // Navigate to login page after successful signup
+        navigate("/login");
     };
 
     const handleGoogleSignUp = () => {
@@ -228,8 +240,8 @@ const SignUp = () => {
                                     onBlur={handleBlur}
                                     placeholder="John Doe"
                                     className={`w-full h-11 px-4 text-sm bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.fullName
-                                            ? "border-red-400 focus:ring-red-500/20 focus:border-red-500"
-                                            : "border-gray-200 focus:ring-emerald-500/20 focus:border-emerald-500"
+                                        ? "border-red-400 focus:ring-red-500/20 focus:border-red-500"
+                                        : "border-gray-200 focus:ring-emerald-500/20 focus:border-emerald-500"
                                         }`}
                                 />
                                 {errors.fullName && (
@@ -251,8 +263,8 @@ const SignUp = () => {
                                     onBlur={handleBlur}
                                     placeholder="you@example.com"
                                     className={`w-full h-11 px-4 text-sm bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.email
-                                            ? "border-red-400 focus:ring-red-500/20 focus:border-red-500"
-                                            : "border-gray-200 focus:ring-emerald-500/20 focus:border-emerald-500"
+                                        ? "border-red-400 focus:ring-red-500/20 focus:border-red-500"
+                                        : "border-gray-200 focus:ring-emerald-500/20 focus:border-emerald-500"
                                         }`}
                                 />
                                 {errors.email && (
@@ -275,8 +287,8 @@ const SignUp = () => {
                                         onBlur={handleBlur}
                                         placeholder="Create a strong password"
                                         className={`w-full h-11 px-4 pr-11 text-sm bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.password
-                                                ? "border-red-400 focus:ring-red-500/20 focus:border-red-500"
-                                                : "border-gray-200 focus:ring-emerald-500/20 focus:border-emerald-500"
+                                            ? "border-red-400 focus:ring-red-500/20 focus:border-red-500"
+                                            : "border-gray-200 focus:ring-emerald-500/20 focus:border-emerald-500"
                                             }`}
                                     />
                                     <button
@@ -324,10 +336,10 @@ const SignUp = () => {
                                         onBlur={handleBlur}
                                         placeholder="Confirm your password"
                                         className={`w-full h-11 px-4 pr-11 text-sm bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.confirmPassword
-                                                ? "border-red-400 focus:ring-red-500/20 focus:border-red-500"
-                                                : formData.confirmPassword && formData.confirmPassword === formData.password
-                                                    ? "border-emerald-400 focus:ring-emerald-500/20 focus:border-emerald-500"
-                                                    : "border-gray-200 focus:ring-emerald-500/20 focus:border-emerald-500"
+                                            ? "border-red-400 focus:ring-red-500/20 focus:border-red-500"
+                                            : formData.confirmPassword && formData.confirmPassword === formData.password
+                                                ? "border-emerald-400 focus:ring-emerald-500/20 focus:border-emerald-500"
+                                                : "border-gray-200 focus:ring-emerald-500/20 focus:border-emerald-500"
                                             }`}
                                     />
                                     <button
