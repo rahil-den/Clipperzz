@@ -37,11 +37,10 @@ const userSchema = new mongoose.Schema(
 );
 
 // Hide superadmin from normal queries
-userSchema.pre(/^find/, function (next) {
+userSchema.pre(/^find/, function () {
     if (!this.getQuery().role || this.getQuery().role !== "superadmin") {
         this.where({ role: { $ne: "superadmin" } });
     }
-    next();
 });
 
 // Strip password from JSON output

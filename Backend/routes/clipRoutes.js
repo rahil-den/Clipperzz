@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { createClip, getClips, getClipById, updateClip, deleteClip } from "../controllers/clipController.js";
-import protect from "../middleware/auth.js";
+
 
 const router = Router();
 
-router.use(protect);
+
 
 router.post("/", createClip);
 router.get("/", getClips);

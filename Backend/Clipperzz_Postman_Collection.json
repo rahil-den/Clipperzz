@@ -1,0 +1,291 @@
+{
+  "info": {
+    "name": "Clipperzz API (No Middleware)",
+    "description": "Collection of all Clipperzz APIs with authentication middleware bypassed for local testing.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@test.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": { "raw": "http://localhost:5000/api/auth/register", "host": ["http://localhost:5000"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@test.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": { "raw": "http://localhost:5000/api/auth/login", "host": ["http://localhost:5000"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Get Current User (Me)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:5000/api/auth/me", "host": ["http://localhost:5000"], "path": ["api", "auth", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Create User (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Admin User\",\n  \"email\": \"newadmin@test.com\",\n  \"password\": \"secure123\",\n  \"role\": \"admin\",\n  \"isActive\": true\n}"
+            },
+            "url": { "raw": "http://localhost:5000/api/users", "host": ["http://localhost:5000"], "path": ["api", "users"] }
+          }
+        },
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:5000/api/users", "host": ["http://localhost:5000"], "path": ["api", "users"] }
+          }
+        },
+        {
+          "name": "Get User By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:5000/api/users/605c72abfc13ae300f000000", "host": ["http://localhost:5000"], "path": ["api", "users", "605c72abfc13ae300f000000"] }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"role\": \"premium\",\n  \"isActive\": true\n}"
+            },
+            "url": { "raw": "http://localhost:5000/api/users/605c72abfc13ae300f000000", "host": ["http://localhost:5000"], "path": ["api", "users", "605c72abfc13ae300f000000"] }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "http://localhost:5000/api/users/605c72abfc13ae300f000000", "host": ["http://localhost:5000"], "path": ["api", "users", "605c72abfc13ae300f000000"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Videos",
+      "item": [
+        {
+          "name": "Get All Videos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:5000/api/videos", "host": ["http://localhost:5000"], "path": ["api", "videos"] }
+          }
+        },
+        {
+          "name": "Create Video",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Test Video\",\n  \"url\": \"https://youtube.com/watch?v=dQw4w9WgXcQ\",\n  \"duration\": 120\n}"
+            },
+            "url": { "raw": "http://localhost:5000/api/videos", "host": ["http://localhost:5000"], "path": ["api", "videos"] }
+          }
+        },
+        {
+          "name": "Get Video By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:5000/api/videos/605c72abfc13ae300f000001", "host": ["http://localhost:5000"], "path": ["api", "videos", "605c72abfc13ae300f000001"] }
+          }
+        },
+        {
+          "name": "Update Video",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"processed\"\n}"
+            },
+            "url": { "raw": "http://localhost:5000/api/videos/605c72abfc13ae300f000001", "host": ["http://localhost:5000"], "path": ["api", "videos", "605c72abfc13ae300f000001"] }
+          }
+        },
+        {
+          "name": "Delete Video",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "http://localhost:5000/api/videos/605c72abfc13ae300f000001", "host": ["http://localhost:5000"], "path": ["api", "videos", "605c72abfc13ae300f000001"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Clips",
+      "item": [
+        {
+          "name": "Get All Clips",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:5000/api/clips", "host": ["http://localhost:5000"], "path": ["api", "clips"] }
+          }
+        },
+        {
+          "name": "Create Clip",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"video\": \"605c72abfc13ae300f000001\",\n  \"startTime\": 10,\n  \"endTime\": 30,\n  \"title\": \"Epic Moment\"\n}"
+            },
+            "url": { "raw": "http://localhost:5000/api/clips", "host": ["http://localhost:5000"], "path": ["api", "clips"] }
+          }
+        },
+        {
+          "name": "Get Clip By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:5000/api/clips/605c72abfc13ae300f000002", "host": ["http://localhost:5000"], "path": ["api", "clips", "605c72abfc13ae300f000002"] }
+          }
+        },
+        {
+          "name": "Update Clip",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Epic Moment\"\n}"
+            },
+            "url": { "raw": "http://localhost:5000/api/clips/605c72abfc13ae300f000002", "host": ["http://localhost:5000"], "path": ["api", "clips", "605c72abfc13ae300f000002"] }
+          }
+        },
+        {
+          "name": "Delete Clip",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "http://localhost:5000/api/clips/605c72abfc13ae300f000002", "host": ["http://localhost:5000"], "path": ["api", "clips", "605c72abfc13ae300f000002"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscriptions",
+      "item": [
+        {
+          "name": "Get My Subscription",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:5000/api/subscriptions/me", "host": ["http://localhost:5000"], "path": ["api", "subscriptions", "me"] }
+          }
+        },
+        {
+          "name": "Get All Subscriptions (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:5000/api/subscriptions", "host": ["http://localhost:5000"], "path": ["api", "subscriptions"] }
+          }
+        },
+        {
+          "name": "Update Subscription (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan\": \"pro\",\n  \"status\": \"active\"\n}"
+            },
+            "url": { "raw": "http://localhost:5000/api/subscriptions/605c72abfc13ae300f000003", "host": ["http://localhost:5000"], "path": ["api", "subscriptions", "605c72abfc13ae300f000003"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Usage",
+      "item": [
+        {
+          "name": "Get My Usage",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:5000/api/usage/me", "host": ["http://localhost:5000"], "path": ["api", "usage", "me"] }
+          }
+        },
+        {
+          "name": "Get All Usage (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:5000/api/usage", "host": ["http://localhost:5000"], "path": ["api", "usage"] }
+          }
+        },
+        {
+          "name": "Update Usage (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bytesProcessed\": 104857600\n}"
+            },
+            "url": { "raw": "http://localhost:5000/api/usage/605c72abfc13ae300f000004", "host": ["http://localhost:5000"], "path": ["api", "usage", "605c72abfc13ae300f000004"] }
+          }
+        }
+      ]
+    }
+  ]
+}

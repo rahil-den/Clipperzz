@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import bodyParser from "body-parser";
 import cors from "cors";
 import connectDB from "./config/db.js";
-import errorHandler from "./middleware/errorHandler.js";
+
 
 // Route imports
 import authRoutes from "./routes/authRoutes.js";
@@ -37,7 +37,7 @@ app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/usage", usageRoutes);
 
 // Error handler (must be after routes)
-app.use(errorHandler);
+
 
 // Connect to DB and start server
 connectDB().then(() => {
