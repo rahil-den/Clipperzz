@@ -23,12 +23,18 @@ export const createClip = async (req, res) => {
     }
 };
 
-// @desc    Get all clips for current user
+// @desc    Get all clips
 // @route   GET /api/clips
 export const getClips = async (req, res) => {
     try {
+        // For admin, we might want to return all clips, but keeping the user filter for now as per original code
+        // and adding population for the admin dashboard.
         if (!req.user) req.user = { _id: "605c72abfc13ae300f000000", id: "605c72abfc13ae300f000000", role: "superadmin", name: "Test Admin" };
-        const clips = await Clip.find({ user: req.user._id })
+        
+        const query = (req.user.role === "admin" || req.user.role === "superadmin") ? {} : { user: req.user._id };
+        
+        const clips = await Clip.find(query)
+            .populate("user", "name email")
             .populate("video", "title sourceType")
             .sort({ createdAt: -1 });
         res.json(clips);
@@ -43,12 +49,12 @@ export const getClips = async (req, res) => {
 export const getClipById = async (req, res) => {
     try {
         if (!req.user) req.user = { _id: "605c72abfc13ae300f000000", id: "605c72abfc13ae300f000000", role: "superadmin", name: "Test Admin" };
-        const clip = await Clip.findById(req.params.id).populate("video", "title sourceType");
+        const clip = await Clip.findById(req.params.id).populate("video", "title sourceType").populate("user", "name");
         if (!clip) {
             return res.status(404).json({ message: "Clip not found" });
         }
 
-        if (clip.user.toString() !== req.user._id.toString()) {
+        if (req.user.role !== "admin" && req.user.role !== "superadmin" && clip.user._id.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: "Not authorized" });
         }
 
@@ -69,7 +75,7 @@ export const updateClip = async (req, res) => {
             return res.status(404).json({ message: "Clip not found" });
         }
 
-        if (clip.user.toString() !== req.user._id.toString()) {
+        if (req.user.role !== "admin" && req.user.role !== "superadmin" && clip.user.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: "Not authorized" });
         }
 
@@ -95,7 +101,7 @@ export const deleteClip = async (req, res) => {
             return res.status(404).json({ message: "Clip not found" });
         }
 
-        if (clip.user.toString() !== req.user._id.toString()) {
+        if (req.user.role !== "admin" && req.user.role !== "superadmin" && clip.user.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: "Not authorized" });
         }
 

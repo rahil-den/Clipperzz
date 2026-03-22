@@ -1,28 +1,38 @@
-import { useState } from "react";
-import { MoreHorizontal, Edit, UserX, Trash2, ShieldCheck, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { MoreHorizontal, Edit, UserX, Trash2, ShieldCheck, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import RoleBadge from "./RoleBadge";
 import { AdminButton } from "./AdminButton";
-
-const mockUsers = [
-    { id: 1, name: "Alex Johnson", email: "alex@example.com", authType: "Email", role: "premium", status: "active", avatar: "Alex" },
-    { id: 2, name: "Sarah Wilson", email: "sarah@gmail.com", authType: "Google", role: "user", status: "active", avatar: "Sarah" },
-    { id: 3, name: "Mike Chen", email: "mike@example.com", authType: "Email", role: "admin", status: "active", avatar: "Mike" },
-    { id: 4, name: "Emily Brown", email: "emily@test.com", authType: "Google", role: "user", status: "suspended", avatar: "Emily" },
-    { id: 5, name: "David Lee", email: "david@example.com", authType: "Email", role: "premium", status: "active", avatar: "David" },
-    { id: 6, name: "Lisa Wang", email: "lisa@gmail.com", authType: "Google", role: "user", status: "active", avatar: "Lisa" },
-    { id: 7, name: "James Miller", email: "james@example.com", authType: "Email", role: "user", status: "active", avatar: "James" },
-    { id: 8, name: "Anna Garcia", email: "anna@test.com", authType: "Email", role: "premium", status: "active", avatar: "Anna" },
-];
+import { getUsers } from "../../services/api";
 
 const UsersTable = ({ isSuperAdmin = false }) => {
+    const [users, setUsers] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [actionMenuOpen, setActionMenuOpen] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const usersPerPage = 5;
 
-    const totalPages = Math.ceil(mockUsers.length / usersPerPage);
+    useEffect(() => {
+        const fetchUsers = async () => {
+            setIsLoading(true);
+            try {
+                const data = await getUsers();
+                // Ensure data is an array
+                setUsers(Array.isArray(data) ? data : data.users || []);
+            } catch (err) {
+                console.error("[UsersTable.jsx] Error fetching users:", err);
+                setError("Failed to load users. Please try again later.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchUsers();
+    }, []);
+
+    const totalPages = Math.ceil(users.length / usersPerPage);
     const startIndex = (currentPage - 1) * usersPerPage;
-    const displayedUsers = mockUsers.slice(startIndex, startIndex + usersPerPage);
+    const displayedUsers = users.slice(startIndex, startIndex + usersPerPage);
 
     const getStatusBadge = (status) => {
         const styles = {
@@ -50,7 +60,7 @@ const UsersTable = ({ isSuperAdmin = false }) => {
     };
 
     return (
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden font-['Satoshi',sans-serif]">
+        <div className="bg-white rounded-2xl border border-gray-100 font-['Satoshi',sans-serif]">
             <div className="overflow-x-auto">
                 <table className="w-full">
                     <thead>
@@ -63,96 +73,125 @@ const UsersTable = ({ isSuperAdmin = false }) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {displayedUsers.map((user) => (
-                            <tr
-                                key={user.id}
-                                className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors duration-150"
-                            >
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-3">
-                                        <img
-                                            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.avatar}`}
-                                            alt={user.name}
-                                            className="w-10 h-10 rounded-full bg-gray-100"
-                                        />
-                                        <div>
-                                            <p className="font-medium text-gray-900">{user.name}</p>
-                                            <p className="text-sm text-gray-500">{user.email}</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    {getAuthTypeBadge(user.authType)}
-                                </td>
-                                <td className="px-6 py-4">
-                                    <RoleBadge role={user.role} />
-                                </td>
-                                <td className="px-6 py-4">
-                                    {getStatusBadge(user.status)}
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center justify-end gap-2 relative">
-                                        <button
-                                            onClick={() => setActionMenuOpen(actionMenuOpen === user.id ? null : user.id)}
-                                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-150"
-                                        >
-                                            <MoreHorizontal className="w-4 h-4 text-gray-500" />
-                                        </button>
-
-                                        {actionMenuOpen === user.id && (
-                                            <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-10">
-                                                <button
-                                                    onClick={() => {
-                                                        console.log('[UsersTable.jsx] Edit User:', user);
-                                                        setActionMenuOpen(null);
-                                                    }}
-                                                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                                                >
-                                                    <Edit className="w-4 h-4" />
-                                                    Edit User
-                                                </button>
-                                                {isSuperAdmin && user.role !== "admin" && (
-                                                    <button
-                                                        onClick={() => {
-                                                            console.log('[UsersTable.jsx] Promote to Admin:', user);
-                                                            alert(`${user.name} promoted to Admin!`);
-                                                            setActionMenuOpen(null);
-                                                        }}
-                                                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50 transition-colors"
-                                                    >
-                                                        <ShieldCheck className="w-4 h-4" />
-                                                        Promote to Admin
-                                                    </button>
-                                                )}
-                                                <button
-                                                    onClick={() => {
-                                                        const action = user.status === "suspended" ? "Unsuspend" : "Suspend";
-                                                        console.log(`[UsersTable.jsx] ${action} User:`, user);
-                                                        alert(`${user.name} ${action.toLowerCase()}ed!`);
-                                                        setActionMenuOpen(null);
-                                                    }}
-                                                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 transition-colors"
-                                                >
-                                                    <UserX className="w-4 h-4" />
-                                                    {user.status === "suspended" ? "Unsuspend" : "Suspend"}
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        console.log('[UsersTable.jsx] Delete User:', user);
-                                                        alert(`${user.name} deleted!`);
-                                                        setActionMenuOpen(null);
-                                                    }}
-                                                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                    Delete User
-                                                </button>
-                                            </div>
-                                        )}
+                        {isLoading ? (
+                            <tr>
+                                <td colSpan="5" className="px-6 py-12 text-center">
+                                    <div className="flex flex-col items-center gap-2">
+                                        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+                                        <p className="text-sm text-gray-500 font-medium">Loading users...</p>
                                     </div>
                                 </td>
                             </tr>
-                        ))}
+                        ) : error ? (
+                            <tr>
+                                <td colSpan="5" className="px-6 py-12 text-center">
+                                    <p className="text-sm text-red-500 font-medium">{error}</p>
+                                </td>
+                            </tr>
+                        ) : users.length === 0 ? (
+                            <tr>
+                                <td colSpan="5" className="px-6 py-12 text-center">
+                                    <p className="text-sm text-gray-400 font-medium">No users found</p>
+                                </td>
+                            </tr>
+                        ) : (
+                            displayedUsers.map((user) => {
+                                // Map backend fields to frontend expectations
+                                const status = user.isActive === false ? "suspended" : "active";
+                                const authType = user.authProvider === "google" ? "Google" : "Email";
+
+                                return (
+                                    <tr
+                                        key={user._id}
+                                        className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors duration-150"
+                                    >
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <img
+                                                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.avatar || user.name}`}
+                                                    alt={user.name}
+                                                    className="w-10 h-10 rounded-full bg-gray-100"
+                                                />
+                                                <div>
+                                                    <p className="font-medium text-gray-900">{user.name}</p>
+                                                    <p className="text-sm text-gray-500">{user.email}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {getAuthTypeBadge(authType)}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <RoleBadge role={user.role} />
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {getStatusBadge(status)}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center justify-end gap-2 relative">
+                                                <button
+                                                    onClick={() => setActionMenuOpen(actionMenuOpen === user._id ? null : user._id)}
+                                                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-150"
+                                                >
+                                                    <MoreHorizontal className="w-4 h-4 text-gray-500" />
+                                                </button>
+
+                                                {actionMenuOpen === user._id && (
+                                                    <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-[999]">
+                                                        <button
+                                                            onClick={() => {
+                                                                console.log('[UsersTable.jsx] Edit User:', user);
+                                                                setActionMenuOpen(null);
+                                                            }}
+                                                            className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                                        >
+                                                            <Edit className="w-4 h-4" />
+                                                            Edit User
+                                                        </button>
+                                                        {isSuperAdmin && user.role !== "admin" && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    console.log('[UsersTable.jsx] Promote to Admin:', user);
+                                                                    alert(`${user.name} promoted to Admin!`);
+                                                                    setActionMenuOpen(null);
+                                                                }}
+                                                                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50 transition-colors"
+                                                            >
+                                                                <ShieldCheck className="w-4 h-4" />
+                                                                Promote to Admin
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => {
+                                                                const action = status === "suspended" ? "Unsuspend" : "Suspend";
+                                                                console.log(`[UsersTable.jsx] ${action} User:`, user);
+                                                                alert(`${user.name} ${action.toLowerCase()}ed!`);
+                                                                setActionMenuOpen(null);
+                                                            }}
+                                                            className="flex items-center gap-2 w-full px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 transition-colors"
+                                                        >
+                                                            <UserX className="w-4 h-4" />
+                                                            {status === "suspended" ? "Unsuspend" : "Suspend"}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                console.log('[UsersTable.jsx] Delete User:', user);
+                                                                alert(`${user.name} deleted!`);
+                                                                setActionMenuOpen(null);
+                                                            }}
+                                                            className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                            Delete User
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })
+                        )}
                     </tbody>
                 </table>
             </div>
@@ -160,7 +199,7 @@ const UsersTable = ({ isSuperAdmin = false }) => {
             {/* Pagination */}
             <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
                 <p className="text-sm text-gray-500">
-                    Showing {startIndex + 1} to {Math.min(startIndex + usersPerPage, mockUsers.length)} of {mockUsers.length} users
+                    Showing {users.length > 0 ? startIndex + 1 : 0} to {Math.min(startIndex + usersPerPage, users.length)} of {users.length} users
                 </p>
                 <div className="flex items-center gap-2">
                     <AdminButton

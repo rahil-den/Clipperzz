@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, ArrowRight, Star, AlertCircle, Check } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Star, AlertCircle, Check, Loader2 } from "lucide-react";
+import { createUser } from "../../services/api";
 
 const SignUp = () => {
     const navigate = useNavigate();
@@ -14,6 +15,8 @@ const SignUp = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(true);
     const [errors, setErrors] = useState({});
     const [touched, setTouched] = useState({});
+    const [isLoading, setIsLoading] = useState(false);
+    const [apiError, setApiError] = useState("");
 
     // Validation functions
     const validateFullName = (name) => {
@@ -91,17 +94,9 @@ const SignUp = () => {
         setTouched({ ...touched, [e.target.name]: true });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-
-        // Log form data to console on button click
-        console.log("[SignUp.jsx] Form Submitted:", {
-            fullName: formData.fullName,
-            email: formData.email,
-            password: formData.password,
-            confirmPassword: formData.confirmPassword,
-            submittedAt: new Date().toISOString(),
-        });
+        setApiError("");
 
         // Touch all fields to show errors
         setTouched({ fullName: true, email: true, password: true, confirmPassword: true });
@@ -122,15 +117,21 @@ const SignUp = () => {
             return;
         }
 
-        console.log("[SignUp.jsx] Account Created:", {
-            ...formData,
-            password: "***hidden***",
-            confirmPassword: "***hidden***",
-            createdAt: new Date().toISOString(),
-        });
-
-        // Navigate to login page after successful signup
-        navigate("/login");
+        setIsLoading(true);
+        try {
+            await createUser({
+                name: formData.fullName,
+                email: formData.email,
+                password: formData.password,
+            });
+            console.log("[SignUp.jsx] Account Created Successfully");
+            navigate("/login");
+        } catch (error) {
+            console.error("[SignUp.jsx] Error creating account:", error);
+            setApiError(error.response?.data?.message || "Something went wrong. Please try again.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleGoogleSignUp = () => {
@@ -364,13 +365,31 @@ const SignUp = () => {
                                 )}
                             </div>
 
+                            {/* API Error Message */}
+                            {apiError && (
+                                <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm">
+                                    <AlertCircle className="w-4 h-4" />
+                                    <span>{apiError}</span>
+                                </div>
+                            )}
+
                             {/* Submit Button */}
                             <button
                                 type="submit"
-                                className="w-full h-11 flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-full transition-all duration-200 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 mt-4"
+                                disabled={isLoading}
+                                className="w-full h-11 flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 text-white text-sm font-medium rounded-full transition-all duration-200 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 mt-4"
                             >
-                                Create Account
-                                <ArrowRight className="w-4 h-4" />
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Creating Account...
+                                    </>
+                                ) : (
+                                    <>
+                                        Create Account
+                                        <ArrowRight className="w-4 h-4" />
+                                    </>
+                                )}
                             </button>
                         </form>
 

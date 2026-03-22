@@ -1,26 +1,37 @@
-import { useState } from "react";
-import { MoreHorizontal, Eye, Flag, Trash2, RefreshCw, X, Play, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { MoreHorizontal, Eye, Flag, Trash2, RefreshCw, X, Play, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { AdminButton } from "./AdminButton";
-
-const mockClips = [
-    { id: 1, title: "Product Demo Highlight", user: "Alex Johnson", status: "ready", duration: "0:45", created: "2 hours ago", thumbnail: "product" },
-    { id: 2, title: "Tutorial Intro Sequence", user: "Sarah Wilson", status: "processing", duration: "1:20", created: "4 hours ago", thumbnail: "tutorial" },
-    { id: 3, title: "Customer Testimonial", user: "Mike Chen", status: "ready", duration: "0:32", created: "1 day ago", thumbnail: "testimonial" },
-    { id: 4, title: "Brand Story Clip", user: "Emily Brown", status: "failed", duration: "2:15", created: "1 day ago", thumbnail: "brand" },
-    { id: 5, title: "Event Recap #1", user: "David Lee", status: "flagged", duration: "1:05", created: "2 days ago", thumbnail: "event" },
-    { id: 6, title: "Social Media Teaser", user: "Lisa Wang", status: "ready", duration: "0:28", created: "3 days ago", thumbnail: "social" },
-];
+import { getClips } from "../../services/api";
 
 const ClipsTable = () => {
+    const [clips, setClips] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [actionMenuOpen, setActionMenuOpen] = useState(null);
     const [previewModal, setPreviewModal] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const clipsPerPage = 5;
 
-    const totalPages = Math.ceil(mockClips.length / clipsPerPage);
+    useEffect(() => {
+        const fetchClips = async () => {
+            setIsLoading(true);
+            try {
+                const data = await getClips();
+                setClips(Array.isArray(data) ? data : data.clips || []);
+            } catch (err) {
+                console.error("[ClipsTable.jsx] Error fetching clips:", err);
+                setError("Failed to load clips. Please try again later.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchClips();
+    }, []);
+
+    const totalPages = Math.ceil(clips.length / clipsPerPage);
     const startIndex = (currentPage - 1) * clipsPerPage;
-    const displayedClips = mockClips.slice(startIndex, startIndex + clipsPerPage);
+    const displayedClips = clips.slice(startIndex, startIndex + clipsPerPage);
 
     const getStatusBadge = (status) => {
         const styles = {
@@ -39,7 +50,7 @@ const ClipsTable = () => {
 
     return (
         <>
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden font-['Satoshi',sans-serif]">
+            <div className="bg-white rounded-2xl border border-gray-100 font-['Satoshi',sans-serif]">
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
@@ -53,75 +64,98 @@ const ClipsTable = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {displayedClips.map((clip) => (
-                                <tr
-                                    key={clip.id}
-                                    className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors duration-150"
-                                >
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div
-                                                className="w-16 h-10 rounded-lg bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
-                                                onClick={() => setPreviewModal(clip)}
-                                            >
-                                                <Play className="w-4 h-4 text-gray-500" />
-                                            </div>
-                                            <p className="font-medium text-gray-900">{clip.title}</p>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <p className="text-sm text-gray-600">{clip.user}</p>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <p className="text-sm text-gray-600 font-mono">{clip.duration}</p>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        {getStatusBadge(clip.status)}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <p className="text-sm text-gray-500">{clip.created}</p>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center justify-end gap-2 relative">
-                                            <button
-                                                onClick={() => setActionMenuOpen(actionMenuOpen === clip.id ? null : clip.id)}
-                                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-150"
-                                            >
-                                                <MoreHorizontal className="w-4 h-4 text-gray-500" />
-                                            </button>
-
-                                            {actionMenuOpen === clip.id && (
-                                                <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-10">
-                                                    <button
-                                                        onClick={() => {
-                                                            setPreviewModal(clip);
-                                                            setActionMenuOpen(null);
-                                                        }}
-                                                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                                                    >
-                                                        <Eye className="w-4 h-4" />
-                                                        Preview
-                                                    </button>
-                                                    {clip.status === "failed" && (
-                                                        <button className="flex items-center gap-2 w-full px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 transition-colors">
-                                                            <RefreshCw className="w-4 h-4" />
-                                                            Reprocess
-                                                        </button>
-                                                    )}
-                                                    <button className="flex items-center gap-2 w-full px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 transition-colors">
-                                                        <Flag className="w-4 h-4" />
-                                                        {clip.status === "flagged" ? "Unflag" : "Flag"}
-                                                    </button>
-                                                    <button className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                                        <Trash2 className="w-4 h-4" />
-                                                        Delete
-                                                    </button>
-                                                </div>
-                                            )}
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan="6" className="px-6 py-12 text-center">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+                                            <p className="text-sm text-gray-500 font-medium">Loading clips...</p>
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
+                            ) : error ? (
+                                <tr>
+                                    <td colSpan="6" className="px-6 py-12 text-center">
+                                        <p className="text-sm text-red-500 font-medium">{error}</p>
+                                    </td>
+                                </tr>
+                            ) : clips.length === 0 ? (
+                                <tr>
+                                    <td colSpan="6" className="px-6 py-12 text-center">
+                                        <p className="text-sm text-gray-400 font-medium">No clips found</p>
+                                    </td>
+                                </tr>
+                            ) : (
+                            displayedClips.map((clip) => (
+                                    <tr
+                                        key={clip._id}
+                                        className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors duration-150"
+                                    >
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <div
+                                                    className="w-16 h-10 rounded-lg bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
+                                                    onClick={() => setPreviewModal(clip)}
+                                                >
+                                                    <Play className="w-4 h-4 text-gray-500" />
+                                                </div>
+                                                <p className="font-medium text-gray-900">{clip.title}</p>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <p className="text-sm text-gray-600">{clip.user?.name || "Unknown User"}</p>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <p className="text-sm text-gray-600 font-mono">{clip.duration}</p>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {getStatusBadge(clip.status)}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <p className="text-sm text-gray-500">{new Date(clip.createdAt).toLocaleDateString()}</p>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center justify-end gap-2 relative">
+                                                <button
+                                                    onClick={() => setActionMenuOpen(actionMenuOpen === clip._id ? null : clip._id)}
+                                                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-150"
+                                                >
+                                                    <MoreHorizontal className="w-4 h-4 text-gray-500" />
+                                                </button>
+
+                                                {actionMenuOpen === clip._id && (
+                                                    <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-[999]">
+                                                        <button
+                                                            onClick={() => {
+                                                                setPreviewModal(clip);
+                                                                setActionMenuOpen(null);
+                                                            }}
+                                                            className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                                        >
+                                                            <Eye className="w-4 h-4" />
+                                                            Preview
+                                                        </button>
+                                                        {clip.status === "failed" && (
+                                                            <button className="flex items-center gap-2 w-full px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 transition-colors">
+                                                                <RefreshCw className="w-4 h-4" />
+                                                                Reprocess
+                                                            </button>
+                                                        )}
+                                                        <button className="flex items-center gap-2 w-full px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 transition-colors">
+                                                            <Flag className="w-4 h-4" />
+                                                            {clip.status === "flagged" ? "Unflag" : "Flag"}
+                                                        </button>
+                                                        <button className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                                            <Trash2 className="w-4 h-4" />
+                                                            Delete
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -129,7 +163,7 @@ const ClipsTable = () => {
                 {/* Pagination */}
                 <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
                     <p className="text-sm text-gray-500">
-                        Showing {startIndex + 1} to {Math.min(startIndex + clipsPerPage, mockClips.length)} of {mockClips.length} clips
+                        Showing {clips.length > 0 ? startIndex + 1 : 0} to {Math.min(startIndex + clipsPerPage, clips.length)} of {clips.length} clips
                     </p>
                     <div className="flex items-center gap-2">
                         <AdminButton
