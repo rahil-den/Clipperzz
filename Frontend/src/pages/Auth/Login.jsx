@@ -1,17 +1,21 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, ArrowRight, Star, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Star, AlertCircle, Loader2 } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 const Login = () => {
     const navigate = useNavigate();
+    const { login } = useAuth();
     const [formData, setFormData] = useState({
         email: "",
         password: "",
     });
-    const [showPassword, setShowPassword] = useState(true);
+    const [showPassword, setShowPassword] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
     const [errors, setErrors] = useState({});
     const [touched, setTouched] = useState({});
+    const [isLoading, setIsLoading] = useState(false);
+    const [apiError, setApiError] = useState("");
 
     // Validation functions
     const validateEmail = (email) => {
@@ -49,8 +53,9 @@ const Login = () => {
         setTouched({ ...touched, [e.target.name]: true });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setApiError("");
 
         // Touch all fields to show errors
         setTouched({ email: true, password: true });
@@ -67,20 +72,31 @@ const Login = () => {
             return;
         }
 
-        console.log("[Login.jsx] Login Attempt:", {
-            email: formData.email,
-            password: "***hidden***",
-            rememberMe: rememberMe,
-            loginAt: new Date().toISOString(),
-        });
-        // Navigate to dashboard after login
-        navigate("/dashboard");
+        setIsLoading(true);
+        try {
+            const result = await login({
+                email: formData.email,
+                password: formData.password,
+            });
+            console.log("[Login.jsx] Login Successful", result);
+            
+            // Redirect based on role
+            if (result.role === "admin" || result.role === "superadmin") {
+                navigate("/admin");
+            } else {
+                navigate("/dashboard");
+            }
+        } catch (error) {
+            console.error("[Login.jsx] Login Error:", error);
+            setApiError(error.response?.data?.message || "Invalid email or password. Please try again.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleGoogleLogin = () => {
         console.log("[Login.jsx] Google Login initiated");
-        // Navigate to dashboard after Google login
-        navigate("/dashboard");
+        alert("Google Login is not yet fully implemented via context.");
     };
 
     return (
@@ -251,13 +267,31 @@ const Login = () => {
                                 </label>
                             </div>
 
+                            {/* API Error Message */}
+                            {apiError && (
+                                <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm">
+                                    <AlertCircle className="w-4 h-4" />
+                                    <span>{apiError}</span>
+                                </div>
+                            )}
+
                             {/* Submit Button */}
                             <button
                                 type="submit"
-                                className="w-full h-11 flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-full transition-all duration-200 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 mt-4"
+                                disabled={isLoading}
+                                className="w-full h-11 flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 text-white text-sm font-medium rounded-full transition-all duration-200 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 mt-4"
                             >
-                                Log In
-                                <ArrowRight className="w-4 h-4" />
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Logging In...
+                                    </>
+                                ) : (
+                                    <>
+                                        Log In
+                                        <ArrowRight className="w-4 h-4" />
+                                    </>
+                                )}
                             </button>
                         </form>
 

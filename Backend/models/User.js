@@ -36,9 +36,13 @@ const userSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-// Hide superadmin from normal queries
+// Hide superadmin from normal queries (lists, etc.)
 userSchema.pre(/^find/, function () {
-    if (!this.getQuery().role || this.getQuery().role !== "superadmin") {
+    const query = this.getQuery();
+    // Allow if searching by specific email or ID
+    if (query._id || query.email) return;
+
+    if (!query.role || query.role !== "superadmin") {
         this.where({ role: { $ne: "superadmin" } });
     }
 });

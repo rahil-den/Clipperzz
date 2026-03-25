@@ -145,7 +145,7 @@ const Clips = () => {
             <tbody>
               {filteredClips.map((clip, index) => (
                 <tr
-                  key={clip.id}
+                  key={clip._id}
                   className={cn(
                     "hover:bg-gray-50 transition-colors group",
                     index !== filteredClips.length - 1 && "border-b border-gray-50"
@@ -155,7 +155,7 @@ const Clips = () => {
                     <div className="flex items-center gap-4">
                       <div className="relative w-20 h-12 rounded-lg overflow-hidden bg-gray-100">
                         <img
-                          src={clip.thumbnail}
+                          src={clip.thumbnail || `https://api.dicebear.com/7.x/shapes/svg?seed=${clip._id}`}
                           alt={clip.title}
                           className="w-full h-full object-cover"
                         />
@@ -169,11 +169,11 @@ const Clips = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="text-sm text-gray-600">{clip.duration}</span>
+                    <span className="text-sm text-gray-600">{clip.duration || "0:00"}</span>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1">
-                      {(clip.platforms || []).map((platform, i) => (
+                      {(clip.platforms || ["tiktok"]).map((platform, i) => (
                         <div
                           key={i}
                           className={cn(
@@ -188,14 +188,16 @@ const Clips = () => {
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-sm font-medium text-gray-900">
-                      {formatViews(clip.views)}
+                      {formatViews(clip.views || 0)}
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="text-sm text-gray-500">{clip.sourceVideo}</span>
+                    <span className="text-sm text-gray-500 overflow-hidden text-ellipsis max-w-[150px] block" title={clip.video?.title || "Original Video"}>
+                      {clip.video?.title || "Original Video"}
+                    </span>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="text-sm text-gray-500">{clip.date}</span>
+                    <span className="text-sm text-gray-500">{new Date(clip.createdAt).toLocaleDateString()}</span>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -234,13 +236,13 @@ const Clips = () => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {filteredClips.map((clip) => (
             <ClipCard
-              key={clip.id}
-              id={clip.id}
+              key={clip._id}
+              id={clip._id}
               thumbnail={clip.thumbnail}
               title={clip.title}
               duration={clip.duration}
               hasSubtitles={true}
-              isProcessed={true}
+              isProcessed={clip.status === "ready"}
               onPlay={(id) => console.log("Play", id)}
               onDownload={(id) => console.log("Download", id)}
               onEdit={(id) => console.log("Edit", id)}

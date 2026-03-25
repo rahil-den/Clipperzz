@@ -1,11 +1,11 @@
-import { useState } from "react";
 import { Outlet } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import AdminSidebar from "../components/admin-dashboard-components/AdminSidebar";
 import AdminHeader from "../components/admin-dashboard-components/AdminHeader";
 
 const AdminDashboard = () => {
-    // Toggle for testing Admin vs Super Admin view
-    const [isSuperAdmin, setIsSuperAdmin] = useState(true);
+    const { user } = useAuth();
+    const isSuperAdmin = user?.role === "superadmin";
 
     return (
         <div className="min-h-screen bg-gray-50/50 font-['Satoshi',sans-serif]">
@@ -13,7 +13,7 @@ const AdminDashboard = () => {
             <div className="pl-[240px]">
                 <AdminHeader
                     isSuperAdmin={isSuperAdmin}
-                    onToggleRole={() => setIsSuperAdmin(!isSuperAdmin)}
+                    onToggleRole={() => console.log("Role toggling disabled in production")}
                 />
                 <main className="p-6">
                     <Outlet context={{ isSuperAdmin }} />

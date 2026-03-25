@@ -1,39 +1,57 @@
 import { useState, useEffect } from "react";
 import { Upload, Search, MoreHorizontal, Trash2, Edit, Youtube, ChevronDown, Check, Play, MoreVertical, Download, Share2, Clock, Calendar, Filter, LayoutGrid, List as ListIcon, Plus, Loader2, AlertCircle } from "lucide-react";
-import { getVideos } from "../../services/api";
+import { getVideos, deleteVideo, updateVideo } from "../../services/api";
 import { cn } from "../../lib/utils";
 
 const MyVideos = () => {
     const [videos, setVideos] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [viewMode, setViewMode] = useState("grid"); // Assuming a default view mode
+    const [isActionLoading, setIsActionLoading] = useState(false);
+    const [viewMode, setViewMode] = useState("grid");
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [sourceFilter, setSourceFilter] = useState("all");
     const [showSourceDropdown, setShowSourceDropdown] = useState(false);
     const [showStatusDropdown, setShowStatusDropdown] = useState(false);
 
+    const fetchVideos = async () => {
+        setIsLoading(true);
+        try {
+            const data = await getVideos();
+            setVideos(Array.isArray(data) ? data : data.videos || []);
+        } catch (err) {
+            console.error("[MyVideos.jsx] Error fetching videos:", err);
+            setError("Failed to load your videos. Please try again later.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchVideos = async () => {
-            setIsLoading(true);
-            try {
-                const data = await getVideos();
-                setVideos(Array.isArray(data) ? data : data.videos || []);
-            } catch (err) {
-                console.error("[MyVideos.jsx] Error fetching videos:", err);
-                setError("Failed to load your videos. Please try again later.");
-            } finally {
-                setIsLoading(false);
-            }
-        };
         fetchVideos();
     }, []);
+
+    const handleDeleteVideo = async (video) => {
+        if (!window.confirm(`Are you sure you want to delete "${video.title}"?`)) return;
+        
+        setIsActionLoading(true);
+        try {
+            await deleteVideo(video._id);
+            await fetchVideos();
+        } catch (err) {
+            console.error("[MyVideos.jsx] Error deleting video:", err);
+            alert("Failed to delete video.");
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
 
     const statusOptions = [
         { value: "all", label: "All Status" },
         { value: "completed", label: "Completed" },
         { value: "processing", label: "Processing" },
+        { value: "failed", label: "Failed" },
     ];
 
     const sourceOptions = [
@@ -45,9 +63,16 @@ const MyVideos = () => {
     const filteredVideos = videos.filter((video) => {
         const matchesSearch = video.title.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesStatus = statusFilter === "all" || video.status === statusFilter;
-        const matchesSource = sourceFilter === "all" || video.source === sourceFilter;
+        const matchesSource = sourceFilter === "all" || video.sourceType === sourceFilter;
         return matchesSearch && matchesStatus && matchesSource;
     });
+
+    const formatDuration = (seconds) => {
+        if (!seconds) return "0:00";
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, "0")}`;
+    };
 
     return (
         <div className="max-w-7xl mx-auto space-y-6 font-['Satoshi',sans-serif]">
@@ -141,7 +166,7 @@ const MyVideos = () => {
                     <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
                     <p className="text-red-500 font-medium text-lg mb-2">{error}</p>
                     <button
-                        onClick={() => window.location.reload()}
+                        onClick={() => fetchVideos()}
                         className="text-emerald-500 hover:text-emerald-600 font-medium underline"
                     >
                         Try reloading the page
@@ -166,60 +191,54 @@ const MyVideos = () => {
                     )}
                 </div>
             ) : (
-                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
                     <table className="w-full">
                         <thead>
-                            <tr className="text-left text-xs font-medium text-gray-400 uppercase tracking-wider border-b border-gray-100">
+                            <tr className="text-left text-xs font-medium text-gray-400 uppercase tracking-wider border-b border-gray-100 bg-gray-50/50">
                                 <th className="px-6 py-4">Video</th>
                                 <th className="px-6 py-4">Duration</th>
                                 <th className="px-6 py-4">Source</th>
-                                <th className="px-6 py-4">Clips</th>
                                 <th className="px-6 py-4">Status</th>
                                 <th className="px-6 py-4">Date</th>
-                                <th className="px-6 py-4">Actions</th>
+                                <th className="px-6 py-4 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredVideos.map((video, index) => (
                                 <tr
-                                    key={video.id}
+                                    key={video._id}
                                     className={cn(
-                                        "hover:bg-gray-50 transition-colors cursor-pointer group",
+                                        "hover:bg-gray-50 transition-colors group",
                                         index !== filteredVideos.length - 1 && "border-b border-gray-50"
                                     )}
                                 >
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-4">
-                                            <img
-                                                src={video.thumbnail}
-                                                alt={video.title}
-                                                className="w-20 h-12 object-cover rounded-lg"
-                                            />
-                                            <span className="text-sm font-medium text-gray-900 group-hover:text-emerald-600 transition-colors">
+                                            <div className="w-20 h-12 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                <Play className="w-4 h-4 text-gray-400" />
+                                            </div>
+                                            <span className="text-sm font-medium text-gray-900 line-clamp-1">
                                                 {video.title}
                                             </span>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className="text-sm text-gray-600">{video.duration}</span>
+                                        <span className="text-sm text-gray-600">{formatDuration(video.duration)}</span>
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-2">
-                                            {video.source === "youtube" ? (
+                                            {video.sourceType === "youtube" ? (
                                                 <>
                                                     <Youtube className="w-4 h-4 text-red-500" />
-                                                    <span className="text-sm text-gray-600 capitalize">{video.source}</span>
+                                                    <span className="text-sm text-gray-600 capitalize">YouTube</span>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <Upload className="w-4 h-4 text-gray-400" />
-                                                    <span className="text-sm text-gray-600 capitalize">{video.source}</span>
+                                                    <Upload className="w-4 h-4 text-emerald-500" />
+                                                    <span className="text-sm text-gray-600 capitalize">Upload</span>
                                                 </>
                                             )}
                                         </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className="text-sm font-medium text-gray-900">{video.clips}</span>
                                     </td>
                                     <td className="px-6 py-4">
                                         <span
@@ -227,31 +246,33 @@ const MyVideos = () => {
                                                 "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium",
                                                 video.status === "completed"
                                                     ? "bg-emerald-50 text-emerald-600"
-                                                    : "bg-orange-50 text-orange-600"
+                                                    : video.status === "failed" ? "bg-red-50 text-red-600" : "bg-orange-50 text-orange-600"
                                             )}
                                         >
                                             <span
                                                 className={cn(
                                                     "w-1.5 h-1.5 rounded-full",
-                                                    video.status === "completed" ? "bg-emerald-500" : "bg-orange-500"
+                                                    video.status === "completed" ? "bg-emerald-500" : video.status === "failed" ? "bg-red-500" : "bg-orange-500"
                                                 )}
                                             />
-                                            {video.status === "completed" ? "Completed" : "Processing"}
+                                            {video.status.charAt(0).toUpperCase() + video.status.slice(1)}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className="text-sm text-gray-500">{video.date}</span>
+                                        <span className="text-sm text-gray-500">{new Date(video.createdAt).toLocaleDateString()}</span>
                                     </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <td className="px-6 py-4 text-right">
+                                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors" title="Edit">
                                                 <Edit className="w-4 h-4 text-gray-400" />
                                             </button>
-                                            <button className="p-1.5 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                                            <button 
+                                                onClick={() => handleDeleteVideo(video)}
+                                                className="p-1.5 hover:bg-red-50 rounded-lg transition-colors" 
+                                                title="Delete"
+                                                disabled={isActionLoading}
+                                            >
                                                 <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-500" />
-                                            </button>
-                                            <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors" title="More">
-                                                <MoreHorizontal className="w-4 h-4 text-gray-400" />
                                             </button>
                                         </div>
                                     </td>

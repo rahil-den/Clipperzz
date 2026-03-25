@@ -1,18 +1,19 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, ArrowRight, Star, AlertCircle, Check, Loader2 } from "lucide-react";
-import { createUser } from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
 
 const SignUp = () => {
     const navigate = useNavigate();
+    const { register } = useAuth();
     const [formData, setFormData] = useState({
         fullName: "",
         email: "",
         password: "",
         confirmPassword: "",
     });
-    const [showPassword, setShowPassword] = useState(true);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(true);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [errors, setErrors] = useState({});
     const [touched, setTouched] = useState({});
     const [isLoading, setIsLoading] = useState(false);
@@ -119,13 +120,13 @@ const SignUp = () => {
 
         setIsLoading(true);
         try {
-            await createUser({
+            await register({
                 name: formData.fullName,
                 email: formData.email,
                 password: formData.password,
             });
             console.log("[SignUp.jsx] Account Created Successfully");
-            navigate("/login");
+            navigate("/dashboard");
         } catch (error) {
             console.error("[SignUp.jsx] Error creating account:", error);
             setApiError(error.response?.data?.message || "Something went wrong. Please try again.");

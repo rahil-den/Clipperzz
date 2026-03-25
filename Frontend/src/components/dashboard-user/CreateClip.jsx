@@ -10,12 +10,20 @@ const CreateClip = ({ onGenerate }) => {
         if (!url.trim()) return;
         setIsGenerating(true);
 
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        if (onGenerate) onGenerate(url);
-        setIsGenerating(false);
-        setUrl("");
+        try {
+            const newVideo = await createVideo({
+                title: "New Video from YouTube",
+                sourceType: "youtube",
+                sourceUrl: url,
+            });
+            if (onGenerate) onGenerate(newVideo);
+            setUrl("");
+        } catch (err) {
+            console.error("[CreateClip.jsx] Error creating video:", err);
+            alert("Failed to create video. Please check the URL and try again.");
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
     const handleUpload = (e) => {

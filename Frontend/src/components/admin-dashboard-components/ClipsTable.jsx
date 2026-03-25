@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { MoreHorizontal, Eye, Flag, Trash2, RefreshCw, X, Play, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { AdminButton } from "./AdminButton";
-import { getClips } from "../../services/api";
+import { getClips, updateClip, deleteClip } from "../../services/api";
 
 const ClipsTable = () => {
     const [clips, setClips] = useState([]);
@@ -11,23 +11,55 @@ const ClipsTable = () => {
     const [actionMenuOpen, setActionMenuOpen] = useState(null);
     const [previewModal, setPreviewModal] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [isActionLoading, setIsActionLoading] = useState(false);
     const clipsPerPage = 5;
 
+    const fetchClips = async () => {
+        setIsLoading(true);
+        try {
+            const data = await getClips();
+            setClips(Array.isArray(data) ? data : data.clips || []);
+        } catch (err) {
+            console.error("[ClipsTable.jsx] Error fetching clips:", err);
+            setError("Failed to load clips. Please try again later.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchClips = async () => {
-            setIsLoading(true);
-            try {
-                const data = await getClips();
-                setClips(Array.isArray(data) ? data : data.clips || []);
-            } catch (err) {
-                console.error("[ClipsTable.jsx] Error fetching clips:", err);
-                setError("Failed to load clips. Please try again later.");
-            } finally {
-                setIsLoading(false);
-            }
-        };
         fetchClips();
     }, []);
+
+    const handleDeleteClip = async (clip) => {
+        if (!window.confirm(`Are you sure you want to delete "${clip.title}"?`)) return;
+        
+        setIsActionLoading(true);
+        try {
+            await deleteClip(clip._id);
+            setActionMenuOpen(null);
+            await fetchClips();
+        } catch (err) {
+            console.error("[ClipsTable.jsx] Error deleting clip:", err);
+            alert("Failed to delete clip.");
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
+
+    const handleUpdateStatus = async (clip, newStatus) => {
+        setIsActionLoading(true);
+        try {
+            await updateClip(clip._id, { status: newStatus });
+            setActionMenuOpen(null);
+            await fetchClips();
+        } catch (err) {
+            console.error("[ClipsTable.jsx] Error updating clip status:", err);
+            alert("Failed to update clip status.");
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
 
     const totalPages = Math.ceil(clips.length / clipsPerPage);
     const startIndex = (currentPage - 1) * clipsPerPage;
@@ -86,7 +118,7 @@ const ClipsTable = () => {
                                     </td>
                                 </tr>
                             ) : (
-                            displayedClips.map((clip) => (
+                             displayedClips.map((clip) => (
                                     <tr
                                         key={clip._id}
                                         className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors duration-150"
@@ -125,30 +157,47 @@ const ClipsTable = () => {
 
                                                 {actionMenuOpen === clip._id && (
                                                     <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-[999]">
-                                                        <button
-                                                            onClick={() => {
-                                                                setPreviewModal(clip);
-                                                                setActionMenuOpen(null);
-                                                            }}
-                                                            className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                                                        >
-                                                            <Eye className="w-4 h-4" />
-                                                            Preview
-                                                        </button>
-                                                        {clip.status === "failed" && (
-                                                            <button className="flex items-center gap-2 w-full px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 transition-colors">
-                                                                <RefreshCw className="w-4 h-4" />
-                                                                Reprocess
-                                                            </button>
+                                                        {isActionLoading ? (
+                                                            <div className="px-4 py-2 flex items-center justify-center">
+                                                                <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
+                                                            </div>
+                                                        ) : (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setPreviewModal(clip);
+                                                                        setActionMenuOpen(null);
+                                                                    }}
+                                                                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                                                >
+                                                                    <Eye className="w-4 h-4" />
+                                                                    Preview
+                                                                </button>
+                                                                {clip.status === "failed" && (
+                                                                    <button 
+                                                                        onClick={() => handleUpdateStatus(clip, "processing")}
+                                                                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 transition-colors"
+                                                                    >
+                                                                        <RefreshCw className="w-4 h-4" />
+                                                                        Reprocess
+                                                                    </button>
+                                                                )}
+                                                                <button 
+                                                                    onClick={() => handleUpdateStatus(clip, clip.status === "flagged" ? "ready" : "flagged")}
+                                                                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 transition-colors"
+                                                                >
+                                                                    <Flag className="w-4 h-4" />
+                                                                    {clip.status === "flagged" ? "Unflag" : "Flag"}
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => handleDeleteClip(clip)}
+                                                                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                    Delete
+                                                                </button>
+                                                            </>
                                                         )}
-                                                        <button className="flex items-center gap-2 w-full px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 transition-colors">
-                                                            <Flag className="w-4 h-4" />
-                                                            {clip.status === "flagged" ? "Unflag" : "Flag"}
-                                                        </button>
-                                                        <button className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                                            <Trash2 className="w-4 h-4" />
-                                                            Delete
-                                                        </button>
                                                     </div>
                                                 )}
                                             </div>
@@ -203,7 +252,7 @@ const ClipsTable = () => {
                         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                             <div>
                                 <h3 className="font-semibold text-gray-900">{previewModal.title}</h3>
-                                <p className="text-sm text-gray-500">by {previewModal.user}</p>
+                                <p className="text-sm text-gray-500">by {previewModal.user?.name || "Unknown User"}</p>
                             </div>
                             <button
                                 onClick={() => setPreviewModal(null)}
@@ -213,17 +262,33 @@ const ClipsTable = () => {
                             </button>
                         </div>
                         <div className="aspect-video bg-gray-900 flex items-center justify-center">
-                            <div className="text-center">
-                                <Play className="w-16 h-16 text-white/50 mx-auto mb-2" />
-                                <p className="text-white/50">Video Preview Placeholder</p>
-                            </div>
+                            {previewModal.clipUrl ? (
+                                <video 
+                                    src={previewModal.clipUrl} 
+                                    controls 
+                                    className="w-full h-full"
+                                    autoPlay
+                                />
+                            ) : (
+                                <div className="text-center">
+                                    <Play className="w-16 h-16 text-white/50 mx-auto mb-2" />
+                                    <p className="text-white/50">Video URL not available</p>
+                                </div>
+                            )}
                         </div>
                         <div className="px-6 py-4 bg-gray-50 flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <span className="text-sm text-gray-500">Duration: {previewModal.duration}</span>
                                 {getStatusBadge(previewModal.status)}
                             </div>
-                            <AdminButton variant="danger" size="sm">
+                            <AdminButton 
+                                variant="danger" 
+                                size="sm"
+                                onClick={() => {
+                                    handleDeleteClip(previewModal);
+                                    setPreviewModal(null);
+                                }}
+                            >
                                 <Trash2 className="w-4 h-4" />
                                 Delete Clip
                             </AdminButton>

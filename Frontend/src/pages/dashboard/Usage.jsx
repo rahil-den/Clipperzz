@@ -74,8 +74,12 @@ const Usage = () => {
         const fetchUsage = async () => {
             setIsLoading(true);
             try {
+                // Assuming getAllUsage returns an array of usage records for the user or the admin
+                // For a regular user, it might return just their usage.
                 const data = await getAllUsage();
-                setUsageData(Array.isArray(data) ? data[0] : data);
+                // If it's an array, take the first one; otherwise use the object
+                const usage = Array.isArray(data) ? data[0] : data;
+                setUsageData(usage || {});
             } catch (err) {
                 console.error("[Usage.jsx] Error fetching usage:", err);
                 setError("Failed to load usage statistics.");
@@ -88,17 +92,9 @@ const Usage = () => {
 
     const stats = [
         {
-            label: "Total Minutes",
-            value: usageData?.totalMinutes || 0,
-            limit: usageData?.minutesLimit || 150,
-            icon: Clock,
-            color: "blue",
-            unit: "minutes"
-        },
-        {
-            label: "Videos Processed",
+            label: "Monthly Limit",
             value: usageData?.videosProcessed || 0,
-            limit: usageData?.videosLimit || 20,
+            limit: usageData?.monthlyLimit || 10,
             icon: Video,
             color: "emerald",
             unit: "videos"
@@ -106,10 +102,18 @@ const Usage = () => {
         {
             label: "Clips Generated",
             value: usageData?.clipsGenerated || 0,
-            limit: usageData?.clipsLimit || 200,
+            limit: 100, // Default limit if not in DB
             icon: Scissors,
             color: "purple",
             unit: "clips"
+        },
+        {
+            label: "Account Status",
+            value: "Active",
+            total: "Pro",
+            icon: BarChart3,
+            color: "blue",
+            unit: ""
         },
     ];
 

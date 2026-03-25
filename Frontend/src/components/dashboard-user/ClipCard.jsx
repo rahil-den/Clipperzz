@@ -19,14 +19,16 @@ const ClipCard = ({
     const [bookmarked, setBookmarked] = useState(isBookmarked);
 
     // Default placeholder thumbnails
-    const defaultThumbnails = [
-        "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&h=300&fit=crop",
-        "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=300&fit=crop",
-        "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop",
-        "https://images.unsplash.com/photo-1553484771-371a605b060b?w=400&h=300&fit=crop",
-    ];
+    const getPlaceholderIndex = (idString) => {
+        if (!idString || typeof idString !== "string") return 0;
+        let sum = 0;
+        for (let i = 0; i < idString.length; i++) {
+            sum += idString.charCodeAt(i);
+        }
+        return sum % defaultThumbnails.length;
+    };
 
-    const displayThumbnail = thumbnail || defaultThumbnails[id % defaultThumbnails.length];
+    const displayThumbnail = thumbnail || defaultThumbnails[getPlaceholderIndex(id)];
 
     return (
         <div

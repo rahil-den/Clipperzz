@@ -12,6 +12,9 @@ import videoRoutes from "./routes/videoRoutes.js";
 import clipRoutes from "./routes/clipRoutes.js";
 import subscriptionRoutes from "./routes/subscriptionRoutes.js";
 import usageRoutes from "./routes/usageRoutes.js";
+import jobRoutes from "./routes/jobRoutes.js";
+import logRoutes from "./routes/logRoutes.js";
+import reportRoutes from "./routes/reportRoutes.js";
 
 // Load env vars
 dotenv.config();
@@ -35,6 +38,9 @@ app.use("/api/videos", videoRoutes);
 app.use("/api/clips", clipRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/usage", usageRoutes);
+app.use("/api/jobs", jobRoutes);
+app.use("/api/logs", logRoutes);
+app.use("/api/reports", reportRoutes);
 
 // Error handler (must be after routes)
 

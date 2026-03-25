@@ -1,10 +1,15 @@
-import { useState, useRef } from "react";
-import { User, Bell, Shield, Palette, Globe, Trash2, Camera, Link, AlertCircle, CheckCircle, Eye, EyeOff, MessageSquare, Flag, Headphones, Send } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { User, Bell, Shield, Palette, Globe, Trash2, Camera, Link, AlertCircle, CheckCircle, Eye, EyeOff, MessageSquare, Flag, Headphones, Send, Loader2 } from "lucide-react";
 import { Button } from "../../components/dashboard-user/Button";
 import { cn } from "../../lib/utils";
+import { useAuth } from "../../context/AuthContext";
+import { updateUser } from "../../services/api";
 
 const Settings = () => {
+    const { user, setUser } = useAuth();
     const [activeTab, setActiveTab] = useState("profile");
+    const [isLoading, setIsLoading] = useState(false);
+    const [successMessage, setSuccessMessage] = useState("");
     const [notifications, setNotifications] = useState({
         email: true,
         push: true,
@@ -28,6 +33,7 @@ const Settings = () => {
         confirm: false,
     });
 
+    // Refs for input values
     const firstNameRef = useRef(null);
     const lastNameRef = useRef(null);
     const emailRef = useRef(null);
@@ -36,31 +42,7 @@ const Settings = () => {
     const newPasswordRef = useRef(null);
     const confirmPasswordRef = useRef(null);
 
-    const tabs = [
-        { id: "profile", label: "Profile", icon: User },
-        { id: "notifications", label: "Notifications", icon: Bell },
-        { id: "security", label: "Security", icon: Shield },
-        { id: "appearance", label: "Appearance", icon: Palette },
-        { id: "support", label: "Support", icon: Headphones },
-    ];
-
-    const validateEmail = (email) => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-    };
-
-    const handleEmailChange = (e) => {
-        const email = e.target.value;
-        if (!email) {
-            setEmailError("Email is required");
-        } else if (!validateEmail(email)) {
-            setEmailError("Please enter a valid email address");
-        } else {
-            setEmailError("");
-        }
-    };
-
-    const handleSaveChanges = () => {
+    const handleSaveChanges = async () => {
         const email = emailRef.current?.value;
 
         if (!validateEmail(email)) {
@@ -68,15 +50,25 @@ const Settings = () => {
             return;
         }
 
-        const profileData = {
-            firstName: firstNameRef.current?.value,
-            lastName: lastNameRef.current?.value,
-            email: email,
-            bio: bioRef.current?.value,
-            connectedAccounts,
-        };
-        console.log("Profile Data Saved:", profileData);
-        setEmailError("");
+        setIsLoading(true);
+        setSuccessMessage("");
+        try {
+            const updatedData = {
+                name: `${firstNameRef.current?.value} ${lastNameRef.current?.value}`,
+                email,
+                // Add bio if backend supports it
+            };
+
+            const response = await updateUser(user.id || user._id, updatedData);
+            setUser({ ...user, ...response });
+            setSuccessMessage("Profile updated successfully!");
+            setTimeout(() => setSuccessMessage(""), 3000);
+        } catch (err) {
+            console.error("[Settings.jsx] Error updating profile:", err);
+            setEmailError(err.response?.data?.message || "Failed to update profile.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const validatePassword = (password) => {
@@ -133,12 +125,28 @@ const Settings = () => {
         }
     };
 
-    const handleConnectAccount = (account) => {
-        setConnectedAccounts((prev) => ({
-            ...prev,
-            [account]: !prev[account],
-        }));
-        console.log(`${account} ${connectedAccounts[account] ? "Disconnected" : "Connected"}`);
+    const tabs = [
+        { id: "profile", label: "Profile", icon: User },
+        { id: "notifications", label: "Notifications", icon: Bell },
+        { id: "security", label: "Security", icon: Shield },
+        { id: "appearance", label: "Appearance", icon: Palette },
+        { id: "support", label: "Support", icon: Headphones },
+    ];
+
+    const validateEmail = (email) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    };
+
+    const handleEmailChange = (e) => {
+        const email = e.target.value;
+        if (!email) {
+            setEmailError("Email is required");
+        } else if (!validateEmail(email)) {
+            setEmailError("Please enter a valid email address");
+        } else {
+            setEmailError("");
+        }
     };
 
     return (
@@ -175,10 +183,17 @@ const Settings = () => {
                             <div className="bg-white rounded-2xl border border-gray-100 p-6">
                                 <h2 className="text-lg font-semibold text-gray-900 mb-6">Profile Information</h2>
 
+                                {successMessage && (
+                                    <div className="flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-200 rounded-xl mb-6 text-emerald-700">
+                                        <CheckCircle className="w-5 h-5" />
+                                        <span className="text-sm font-medium">{successMessage}</span>
+                                    </div>
+                                )}
+
                                 <div className="flex items-center gap-6 mb-8">
                                     <div className="relative">
                                         <img
-                                            src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex"
+                                            src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || "User"}`}
                                             alt="Avatar"
                                             className="w-20 h-20 rounded-full"
                                         />
@@ -198,7 +213,7 @@ const Settings = () => {
                                         <input
                                             ref={firstNameRef}
                                             type="text"
-                                            defaultValue="Alex"
+                                            defaultValue={user?.name?.split(" ")[0] || ""}
                                             className="w-full h-10 px-4 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                                         />
                                     </div>
@@ -207,7 +222,7 @@ const Settings = () => {
                                         <input
                                             ref={lastNameRef}
                                             type="text"
-                                            defaultValue="Johnson"
+                                            defaultValue={user?.name?.split(" ").slice(1).join(" ") || ""}
                                             className="w-full h-10 px-4 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                                         />
                                     </div>
@@ -216,7 +231,7 @@ const Settings = () => {
                                         <input
                                             ref={emailRef}
                                             type="email"
-                                            defaultValue="alex@example.com"
+                                            defaultValue={user?.email || ""}
                                             onChange={handleEmailChange}
                                             className={cn(
                                                 "w-full h-10 px-4 text-sm bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent",
@@ -235,7 +250,7 @@ const Settings = () => {
                                         <textarea
                                             ref={bioRef}
                                             rows={3}
-                                            defaultValue="Content creator and marketer."
+                                            defaultValue={user?.bio || "Content creator and marketer."}
                                             className="w-full px-4 py-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
                                         />
                                     </div>
@@ -244,8 +259,10 @@ const Settings = () => {
                                 <div className="flex justify-end mt-6">
                                     <button
                                         onClick={handleSaveChanges}
-                                        className="px-5 py-2.5 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-xl transition-colors"
+                                        disabled={isLoading}
+                                        className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-xl transition-colors disabled:opacity-50"
                                     >
+                                        {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                                         Save Changes
                                     </button>
                                 </div>

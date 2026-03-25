@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { MoreHorizontal, Edit, UserX, Trash2, ShieldCheck, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { MoreHorizontal, Edit, UserX, Trash2, ShieldCheck, ChevronLeft, ChevronRight, Loader2, UserCheck } from "lucide-react";
 import { cn } from "../../lib/utils";
 import RoleBadge from "./RoleBadge";
 import { AdminButton } from "./AdminButton";
-import { getUsers } from "../../services/api";
+import { getUsers, updateUser, deleteUser } from "../../services/api";
 
 const UsersTable = ({ isSuperAdmin = false }) => {
     const [users, setUsers] = useState([]);
@@ -11,24 +11,70 @@ const UsersTable = ({ isSuperAdmin = false }) => {
     const [error, setError] = useState(null);
     const [actionMenuOpen, setActionMenuOpen] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [isActionLoading, setIsActionLoading] = useState(false);
     const usersPerPage = 5;
 
+    const fetchUsers = async () => {
+        setIsLoading(true);
+        try {
+            const data = await getUsers();
+            // Ensure data is an array
+            setUsers(Array.isArray(data) ? data : data.users || []);
+        } catch (err) {
+            console.error("[UsersTable.jsx] Error fetching users:", err);
+            setError("Failed to load users. Please try again later.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchUsers = async () => {
-            setIsLoading(true);
-            try {
-                const data = await getUsers();
-                // Ensure data is an array
-                setUsers(Array.isArray(data) ? data : data.users || []);
-            } catch (err) {
-                console.error("[UsersTable.jsx] Error fetching users:", err);
-                setError("Failed to load users. Please try again later.");
-            } finally {
-                setIsLoading(false);
-            }
-        };
         fetchUsers();
     }, []);
+
+    const handleUpdateStatus = async (user, newStatus) => {
+        setIsActionLoading(true);
+        try {
+            await updateUser(user._id, { isActive: newStatus === "active" });
+            setActionMenuOpen(null);
+            await fetchUsers();
+        } catch (err) {
+            console.error("[UsersTable.jsx] Error updating user status:", err);
+            alert("Failed to update user status.");
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
+
+    const handleDeleteUser = async (user) => {
+        if (!window.confirm(`Are you sure you want to delete ${user.name}?`)) return;
+        
+        setIsActionLoading(true);
+        try {
+            await deleteUser(user._id);
+            setActionMenuOpen(null);
+            await fetchUsers();
+        } catch (err) {
+            console.error("[UsersTable.jsx] Error deleting user:", err);
+            alert("Failed to delete user.");
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
+
+    const handlePromoteAdmin = async (user) => {
+        setIsActionLoading(true);
+        try {
+            await updateUser(user._id, { role: "admin" });
+            setActionMenuOpen(null);
+            await fetchUsers();
+        } catch (err) {
+            console.error("[UsersTable.jsx] Error promoting user:", err);
+            alert("Failed to promote user to admin.");
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
 
     const totalPages = Math.ceil(users.length / usersPerPage);
     const startIndex = (currentPage - 1) * usersPerPage;
@@ -47,17 +93,7 @@ const UsersTable = ({ isSuperAdmin = false }) => {
         );
     };
 
-    const getAuthTypeBadge = (authType) => {
-        const styles = {
-            Email: "bg-gray-100 text-gray-600",
-            Google: "bg-orange-100 text-orange-600",
-        };
-        return (
-            <span className={cn("px-2.5 py-1 rounded-full text-xs font-medium", styles[authType])}>
-                {authType}
-            </span>
-        );
-    };
+    // ... (rest of the component)
 
     return (
         <div className="bg-white rounded-2xl border border-gray-100 font-['Satoshi',sans-serif]">
@@ -119,7 +155,10 @@ const UsersTable = ({ isSuperAdmin = false }) => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            {getAuthTypeBadge(authType)}
+                                            {/* getAuthTypeBadge is defined lower in the file in the original */}
+                                            <span className={cn("px-2.5 py-1 rounded-full text-xs font-medium", authType === "Google" ? "bg-orange-100 text-orange-600" : "bg-gray-100 text-gray-600")}>
+                                                {authType}
+                                            </span>
                                         </td>
                                         <td className="px-6 py-4">
                                             <RoleBadge role={user.role} />
@@ -138,52 +177,47 @@ const UsersTable = ({ isSuperAdmin = false }) => {
 
                                                 {actionMenuOpen === user._id && (
                                                     <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-[999]">
-                                                        <button
-                                                            onClick={() => {
-                                                                console.log('[UsersTable.jsx] Edit User:', user);
-                                                                setActionMenuOpen(null);
-                                                            }}
-                                                            className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                                                        >
-                                                            <Edit className="w-4 h-4" />
-                                                            Edit User
-                                                        </button>
-                                                        {isSuperAdmin && user.role !== "admin" && (
-                                                            <button
-                                                                onClick={() => {
-                                                                    console.log('[UsersTable.jsx] Promote to Admin:', user);
-                                                                    alert(`${user.name} promoted to Admin!`);
-                                                                    setActionMenuOpen(null);
-                                                                }}
-                                                                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50 transition-colors"
-                                                            >
-                                                                <ShieldCheck className="w-4 h-4" />
-                                                                Promote to Admin
-                                                            </button>
+                                                        {isActionLoading ? (
+                                                            <div className="px-4 py-2 flex items-center justify-center">
+                                                                <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
+                                                            </div>
+                                                        ) : (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        console.log('[UsersTable.jsx] Edit User:', user);
+                                                                        setActionMenuOpen(null);
+                                                                    }}
+                                                                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                                                >
+                                                                    <Edit className="w-4 h-4" />
+                                                                    Edit User
+                                                                </button>
+                                                                {isSuperAdmin && user.role !== "admin" && (
+                                                                    <button
+                                                                        onClick={() => handlePromoteAdmin(user)}
+                                                                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50 transition-colors"
+                                                                    >
+                                                                        <ShieldCheck className="w-4 h-4" />
+                                                                        Promote to Admin
+                                                                    </button>
+                                                                )}
+                                                                <button
+                                                                    onClick={() => handleUpdateStatus(user, status === "suspended" ? "active" : "suspended")}
+                                                                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 transition-colors"
+                                                                >
+                                                                    {status === "suspended" ? <UserCheck className="w-4 h-4" /> : <UserX className="w-4 h-4" />}
+                                                                    {status === "suspended" ? "Unsuspend" : "Suspend"}
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteUser(user)}
+                                                                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                    Delete User
+                                                                </button>
+                                                            </>
                                                         )}
-                                                        <button
-                                                            onClick={() => {
-                                                                const action = status === "suspended" ? "Unsuspend" : "Suspend";
-                                                                console.log(`[UsersTable.jsx] ${action} User:`, user);
-                                                                alert(`${user.name} ${action.toLowerCase()}ed!`);
-                                                                setActionMenuOpen(null);
-                                                            }}
-                                                            className="flex items-center gap-2 w-full px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 transition-colors"
-                                                        >
-                                                            <UserX className="w-4 h-4" />
-                                                            {status === "suspended" ? "Unsuspend" : "Suspend"}
-                                                        </button>
-                                                        <button
-                                                            onClick={() => {
-                                                                console.log('[UsersTable.jsx] Delete User:', user);
-                                                                alert(`${user.name} deleted!`);
-                                                                setActionMenuOpen(null);
-                                                            }}
-                                                            className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                            Delete User
-                                                        </button>
                                                     </div>
                                                 )}
                                             </div>

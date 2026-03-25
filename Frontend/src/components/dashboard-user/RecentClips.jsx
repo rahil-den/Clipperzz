@@ -3,43 +3,6 @@ import { ExternalLink } from "lucide-react";
 import ClipCard from "./ClipCard";
 
 const RecentClips = ({ clips = [] }) => {
-    const defaultClips = [
-        {
-            id: 1,
-            thumbnail: "https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=400&h=500&fit=crop",
-            title: "The Secret to Going Viral",
-            duration: "0:32",
-            hasSubtitles: true,
-            isProcessed: true,
-        },
-        {
-            id: 2,
-            thumbnail: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=500&fit=crop",
-            title: "AI Tools You Need Now",
-            duration: "0:45",
-            hasSubtitles: true,
-            isProcessed: true,
-        },
-        {
-            id: 3,
-            thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=500&fit=crop",
-            title: "Marketing Hack #1",
-            duration: "0:28",
-            hasSubtitles: true,
-            isProcessed: true,
-        },
-        {
-            id: 4,
-            thumbnail: "https://images.unsplash.com/photo-1553484771-371a605b060b?w=400&h=500&fit=crop",
-            title: "Build in Public Tips",
-            duration: "0:59",
-            hasSubtitles: false,
-            isProcessed: true,
-        },
-    ];
-
-    const displayClips = clips.length > 0 ? clips : defaultClips;
-
     const handlePlay = (id) => {
         console.log("Playing clip:", id);
     };
@@ -71,23 +34,27 @@ const RecentClips = ({ clips = [] }) => {
             </div>
 
             {/* Clips Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-                {displayClips.map((clip) => (
-                    <ClipCard
-                        key={clip.id}
-                        {...clip}
-                        onPlay={handlePlay}
-                        onDownload={handleDownload}
-                        onEdit={handleEdit}
-                        onShare={handleShare}
-                    />
-                ))}
-            </div>
-
-            {/* Empty State */}
-            {displayClips.length === 0 && (
-                <div className="py-12 text-center">
-                    <p className="text-gray-500">No clips yet. Create your first clip!</p>
+            {clips.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+                    {clips.map((clip) => (
+                        <ClipCard
+                            key={clip._id}
+                            id={clip._id}
+                            title={clip.title}
+                            duration={clip.duration}
+                            isProcessed={clip.status === "ready"}
+                            hasSubtitles={true}
+                            onPlay={handlePlay}
+                            onDownload={handleDownload}
+                            onEdit={handleEdit}
+                            onShare={handleShare}
+                        />
+                    ))}
+                </div>
+            ) : (
+                /* Empty State */
+                <div className="py-12 text-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
+                    <p className="text-gray-500 font-medium">No clips found. Start by uploading a video!</p>
                 </div>
             )}
         </div>

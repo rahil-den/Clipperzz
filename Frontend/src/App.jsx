@@ -32,6 +32,8 @@ import UserReports from './pages/admin-dashboard/UserReports'
 import JobsQueue from './pages/admin-dashboard/JobsQueue'
 import RolesAccess from './pages/admin-dashboard/RolesAccess'
 
+import ProtectedRoute from './components/auth/ProtectedRoute'
+
 const App = () => {
   return (
     <Routes>
@@ -45,7 +47,14 @@ const App = () => {
       <Route path="/verify-email" element={<VerifyEmail />} />
 
       {/* User Dashboard Routes */}
-      <Route path="/dashboard" element={<Dashboard />}>
+      <Route 
+        path="/dashboard" 
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<DashboardHome />} />
         <Route path="videos" element={<MyVideos />} />
         <Route path="clips" element={<Clips />} />
@@ -56,7 +65,14 @@ const App = () => {
       </Route>
 
       {/* Admin Dashboard Routes */}
-      <Route path="/admin" element={<AdminDashboard />}>
+      <Route 
+        path="/admin" 
+        element={
+          <ProtectedRoute requiredRoles={["admin", "superadmin"]}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<AdminHome />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="clips" element={<AdminClips />} />
@@ -66,7 +82,14 @@ const App = () => {
         <Route path="jobs-queue" element={<JobsQueue />} />
         <Route path="settings" element={<AdminSettings />} />
         {/* Super Admin Only Routes */}
-        <Route path="admin-management" element={<AdminManagement />} />
+        <Route 
+          path="admin-management" 
+          element={
+            <ProtectedRoute requiredRoles={["superadmin"]}>
+              <AdminManagement />
+            </ProtectedRoute>
+          } 
+        />
         <Route path="roles-access" element={<RolesAccess />} />
         <Route path="platform-settings" element={<PlatformSettings />} />
         <Route path="system-logs" element={<SystemLogs />} />

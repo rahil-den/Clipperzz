@@ -1,12 +1,11 @@
 import { Router } from "express";
 import { getMySubscription, updateSubscription, getAllSubscriptions } from "../controllers/subscriptionController.js";
-
-
+import { protect, admin } from "../middleware/auth.js";
 
 const router = Router();
 
-router.get("/me", getMySubscription);
-router.get("/", getAllSubscriptions);
-router.put("/:id", updateSubscription);
+router.get("/me", protect, getMySubscription);
+router.get("/", protect, admin, getAllSubscriptions);
+router.put("/:id", protect, admin, updateSubscription);
 
 export default router;

@@ -1,12 +1,30 @@
-import { useState } from "react";
-import { CreditCard, Check, ArrowUpRight, Download, FileText, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { CreditCard, Check, ArrowUpRight, Download, FileText, X, Loader2 } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { getMySubscription } from "../../services/api";
 
 const Billing = () => {
+    const [subscription, setSubscription] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
     const [showUpdateModal, setShowUpdateModal] = useState(false);
     const [cardNumber, setCardNumber] = useState("");
     const [expiry, setExpiry] = useState("");
     const [cvv, setCvv] = useState("");
+
+    useEffect(() => {
+        const fetchSubscription = async () => {
+            setIsLoading(true);
+            try {
+                const data = await getMySubscription();
+                setSubscription(data);
+            } catch (err) {
+                console.error("[Billing.jsx] Error fetching subscription:", err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchSubscription();
+    }, []);
 
     const plans = [
         {
@@ -14,7 +32,7 @@ const Billing = () => {
             subtitle: "For getting started",
             price: 0,
             features: ["5 videos/month", "15 clips/month", "720p export", "Basic templates"],
-            isCurrent: false,
+            isCurrent: subscription?.plan === "starter",
             isPopular: false,
         },
         {
@@ -22,7 +40,7 @@ const Billing = () => {
             subtitle: "For growing creators",
             price: 29,
             features: ["25 videos/month", "200 clips/month", "1080p export", "All templates", "Priority processing", "Remove watermark"],
-            isCurrent: true,
+            isCurrent: subscription?.plan === "pro",
             isPopular: true,
         },
         {
@@ -30,7 +48,7 @@ const Billing = () => {
             subtitle: "For teams & agencies",
             price: 99,
             features: ["Unlimited videos", "Unlimited clips", "4K export", "Custom templates", "API access", "Dedicated support", "Team collaboration"],
-            isCurrent: false,
+            isCurrent: subscription?.plan === "enterprise",
             isPopular: false,
         },
     ];
@@ -41,6 +59,15 @@ const Billing = () => {
         { id: "INV-2023-011", date: "Nov 15, 2023", amount: "$29.00", status: "Paid" },
         { id: "INV-2023-010", date: "Oct 15, 2023", amount: "$29.00", status: "Paid" },
     ];
+
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 min-h-[60vh]">
+                <Loader2 className="w-12 h-12 text-emerald-500 animate-spin mb-4" />
+                <p className="text-gray-500 font-medium">Loading billing details...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-7xl mx-auto space-y-8 font-['Satoshi',sans-serif]">
@@ -62,12 +89,20 @@ const Billing = () => {
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
-                            <h3 className="text-lg font-semibold text-gray-900">Pro Plan</h3>
-                            <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">
-                                Active
+                            <h3 className="text-lg font-semibold text-gray-900">
+                                {subscription?.plan ? subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1) : "Free"} Plan
+                            </h3>
+                            <span className={cn(
+                                "px-2 py-0.5 text-xs font-medium rounded-full",
+                                subscription?.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"
+                            )}>
+                                {subscription?.status === "active" ? "Active" : "Inactive"}
                             </span>
                         </div>
-                        <p className="text-sm text-gray-500">$29 /month • Renews on February 15, 2024</p>
+                        <p className="text-sm text-gray-500">
+                            {subscription?.plan === "pro" ? "$29" : subscription?.plan === "enterprise" ? "$99" : "$0"} /month • 
+                            {subscription?.nextBillingDate ? ` Renews on ${new Date(subscription.nextBillingDate).toLocaleDateString()}` : " No renewal date set"}
+                        </p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3">

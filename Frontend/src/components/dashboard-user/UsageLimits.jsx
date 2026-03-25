@@ -48,11 +48,12 @@ const ProgressBar = ({ value, max, color = "emerald" }) => {
 };
 
 const UsageLimits = ({
-    monthlyUsage = 68,
-    remainingCredits = 12,
-    totalCredits = 50,
-    plan = "Pro",
+    usage = 0,
+    limit = 10,
+    plan = "Free",
 }) => {
+    const monthlyUsagePercent = Math.round((usage / limit) * 100) || 0;
+
     return (
         <div className="bg-white rounded-2xl border border-gray-100 p-5 h-fit font-['Satoshi',sans-serif]">
             {/* Header */}
@@ -69,20 +70,20 @@ const UsageLimits = ({
                 <div>
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-gray-600">Monthly Usage</span>
-                        <span className="text-sm font-semibold text-gray-900">{monthlyUsage}%</span>
+                        <span className="text-sm font-semibold text-gray-900">{monthlyUsagePercent}%</span>
                     </div>
-                    <ProgressBar value={monthlyUsage} max={100} color="emerald" />
+                    <ProgressBar value={usage} max={limit} color="emerald" />
                 </div>
 
-                {/* Remaining Credits - Green bar as requested */}
+                {/* Remaining Credits */}
                 <div>
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-gray-600">Remaining Credits</span>
+                        <span className="text-sm text-gray-600">Videos Processed</span>
                         <span className="text-sm font-semibold text-gray-900">
-                            {remainingCredits} / {totalCredits}
+                            {usage} / {limit}
                         </span>
                     </div>
-                    <ProgressBar value={remainingCredits} max={totalCredits} color="green" />
+                    <ProgressBar value={usage} max={limit} color="green" />
                 </div>
             </div>
 
