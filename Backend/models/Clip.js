@@ -35,9 +35,33 @@ const clipSchema = new mongoose.Schema(
             enum: ["processing", "ready", "failed"],
             default: "processing",
         },
+        // ── Clip Score ─────────────────────────────────────────────────────
+        // AI-generated virality / quality score (0–100).
+        // Null until the processing job completes analysis.
+        clipScore: {
+            type: Number,
+            default: null,
+            min: 0,
+            max: 100,
+        },
+        // Optional score breakdown returned by the AI pipeline
+        scoreBreakdown: {
+            hook:        { type: Number, default: null }, // 0-100
+            pacing:      { type: Number, default: null },
+            retention:   { type: Number, default: null },
+            virality:    { type: Number, default: null },
+        },
+        // Human-readable AI insight text
+        aiInsight: {
+            type: String,
+            default: null,
+        },
     },
     { timestamps: true }
 );
+
+// Index for fast user-based queries
+clipSchema.index({ user: 1, createdAt: -1 });
 
 const Clip = mongoose.model("Clip", clipSchema);
 export default Clip;

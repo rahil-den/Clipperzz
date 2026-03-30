@@ -1,19 +1,22 @@
+import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 
 // @desc    Get all users (admin)
 // @route   GET /api/users
+// @access  Private / Admin
 export const getUsers = async (req, res) => {
     try {
-        const users = await User.find();
+        const users = await User.find().sort({ createdAt: -1 });
         res.json(users);
     } catch (error) {
-        console.error(error);
+        console.error("[getUsers]", error);
         res.status(500).json({ message: error.message || "Server Error" });
     }
 };
 
 // @desc    Get single user by ID
 // @route   GET /api/users/:id
+// @access  Private / Admin
 export const getUserById = async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
@@ -22,13 +25,48 @@ export const getUserById = async (req, res) => {
         }
         res.json(user);
     } catch (error) {
-        console.error(error);
+        console.error("[getUserById]", error);
         res.status(500).json({ message: error.message || "Server Error" });
     }
 };
 
-// @desc    Update user
+// @desc    Create new user (admin)
+// @route   POST /api/users
+// @access  Private / Admin
+export const createUser = async (req, res) => {
+    try {
+        const { name, email, password, role, isActive } = req.body;
+
+        const userExists = await User.findOne({ email });
+        if (userExists) {
+            return res.status(400).json({ message: "User already exists" });
+        }
+
+        // Hash password if provided
+        let hashedPassword = null;
+        if (password) {
+            const salt = await bcrypt.genSalt(12);
+            hashedPassword = await bcrypt.hash(password, salt);
+        }
+
+        const user = await User.create({
+            name,
+            email,
+            password: hashedPassword,
+            role: role || "user",
+            isActive: isActive !== undefined ? isActive : true,
+        });
+
+        res.status(201).json(user);
+    } catch (error) {
+        console.error("[createUser]", error);
+        res.status(500).json({ message: error.message || "Server Error" });
+    }
+};
+
+// @desc    Update user (admin)
 // @route   PUT /api/users/:id
+// @access  Private / Admin
 export const updateUser = async (req, res) => {
     try {
         const { name, email, role, isActive } = req.body;
@@ -46,13 +84,14 @@ export const updateUser = async (req, res) => {
         const updatedUser = await user.save();
         res.json(updatedUser);
     } catch (error) {
-        console.error(error);
+        console.error("[updateUser]", error);
         res.status(500).json({ message: error.message || "Server Error" });
     }
 };
 
-// @desc    Delete user
+// @desc    Delete user (admin)
 // @route   DELETE /api/users/:id
+// @access  Private / Admin
 export const deleteUser = async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
@@ -63,36 +102,7 @@ export const deleteUser = async (req, res) => {
         await user.deleteOne();
         res.json({ message: "User deleted" });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: error.message || "Server Error" });
-    }
-};
-
-// @desc    Create new user (admin)
-// @route   POST /api/users
-export const createUser = async (req, res) => {
-    try {
-        const { name, email, password, role, isActive } = req.body;
-
-        // Check if user exists
-        const { default: User } = await import('../models/User.js');
-        const userExists = await User.findOne({ email });
-        
-        if (userExists) {
-            return res.status(400).json({ message: "User already exists" });
-        }
-
-        const user = await User.create({
-            name,
-            email,
-            password, 
-            role: role || "user",
-            isActive: isActive !== undefined ? isActive : true
-        });
-
-        res.status(201).json(user);
-    } catch (error) {
-        console.error(error);
+        console.error("[deleteUser]", error);
         res.status(500).json({ message: error.message || "Server Error" });
     }
 };

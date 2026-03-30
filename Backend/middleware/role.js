@@ -1,6 +1,20 @@
+/**
+ * authorize(...roles)
+ * Fine-grained role guard — use AFTER the `protect` middleware.
+ *
+ * Usage:
+ *   router.delete('/:id', protect, authorize('admin', 'superadmin'), deleteUser);
+ */
 const authorize = (...roles) => {
     return (req, res, next) => {
-        // TEMPORARY BYPASS FOR DEVELOPMENT AND POSTMAN TESTING
+        if (!req.user) {
+            return res.status(401).json({ message: "Not authenticated" });
+        }
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({
+                message: `Role '${req.user.role}' is not authorized to access this resource`,
+            });
+        }
         next();
     };
 };
