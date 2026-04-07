@@ -1,9 +1,3 @@
-Alright. Here’s a **clean, serious, non-cringe, developer-grade `README.md`** for **Clipperzz**.
-No startup fluff. No “AI-powered revolution” bullshit. Straight signal.
-
-You can copy-paste this as-is.
-
----
 
 # Clipperzz ✂️
 
