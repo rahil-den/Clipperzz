@@ -15,8 +15,8 @@ import crypto from "crypto";
 
 const secret = crypto.randomBytes(64).toString("hex");
 
-console.log("\n✅  Secure JWT secret generated successfully!\n");
+console.log("\n Secure JWT secret generated successfully!\n");
 console.log("─".repeat(60));
 console.log(`JWT_SECRET=${secret}`);
 console.log("─".repeat(60));
-console.log("\n👆  Paste the line above into your .env file.\n");
+console.log("\n Paste the line above into your .env file.\n");

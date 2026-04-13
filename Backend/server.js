@@ -1,5 +1,4 @@
-import dotenv from "dotenv";
-dotenv.config(); // Must be first — loads env before any other imports use process.env
+import "./config/env.js"; // MUST be first — loads .env before any other module reads process.env
 
 import express from "express";
 import bodyParser from "body-parser";

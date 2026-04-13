@@ -45,10 +45,8 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const data = await apiRegister(userData);
-      // Backend returns { _id, name, email, role, token } directly
-      const { token, ...registeredUser } = data;
-      setUser(registeredUser);
-      setIsAuthenticated(true);
+      // Backend returns { message, user } — no token on register.
+      // User must log in explicitly after registering.
       return data;
     } catch (error) {
       throw error;

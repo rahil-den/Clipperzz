@@ -18,6 +18,7 @@ const SignUp = () => {
     const [touched, setTouched] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const [apiError, setApiError] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
 
     // Validation functions
     const validateFullName = (name) => {
@@ -126,7 +127,8 @@ const SignUp = () => {
                 password: formData.password,
             });
             console.log("[SignUp.jsx] Account Created Successfully");
-            navigate("/dashboard");
+            // Redirect to verify-email page so the user knows to check their inbox
+            navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`);
         } catch (error) {
             console.error("[SignUp.jsx] Error creating account:", error);
             setApiError(error.response?.data?.message || "Something went wrong. Please try again.");

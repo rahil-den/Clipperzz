@@ -46,9 +46,7 @@ export const login = async (credentials) => {
 
 export const register = async (userData) => {
   const res = await api.post("/auth/register", userData);
-  if (res.data.token) {
-    localStorage.setItem("token", res.data.token);
-  }
+  // No token on register — user must verify email first
   return res.data;
 };
 
@@ -62,6 +60,19 @@ export const logout = () => {
   window.location.href = "/login";
 };
 
+export const verifyEmail = async (token) => {
+  const res = await api.get(`/auth/verify-email?token=${token}`);
+  // Backend returns a JWT so the user is logged in right after verification
+  if (res.data.token) {
+    localStorage.setItem("token", res.data.token);
+  }
+  return res.data;
+};
+
+export const resendVerification = async (email) => {
+  const res = await api.post("/auth/resend-verification", { email });
+  return res.data;
+};
 // ─── Users ───────────────────────────────────────────────────────────────────
 
 export const createUser = async (userData) => {

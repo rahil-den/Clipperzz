@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, ArrowRight, Star, AlertCircle, Loader2 } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Eye, EyeOff, ArrowRight, Star, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 const Login = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { login } = useAuth();
+    const [successMessage] = useState(location.state?.message || "");
     const [formData, setFormData] = useState({
         email: "",
         password: "",
@@ -166,6 +168,14 @@ const Login = () => {
                             <h2 className="text-xl font-bold text-gray-900 mb-1">Log in to your account</h2>
                             <p className="text-sm text-gray-500">Enter your credentials to continue</p>
                         </div>
+
+                        {/* Success message from signup redirect */}
+                        {successMessage && (
+                            <div className="flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-700 text-sm mb-4">
+                                <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                                <span>{successMessage}</span>
+                            </div>
+                        )}
 
                         {/* Google Button */}
                         <button

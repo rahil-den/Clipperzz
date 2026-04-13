@@ -4,7 +4,7 @@ import { protect, admin } from "../middleware/auth.js";
 
 const router = Router();
 
-router.post("/", protect, admin, createUser);
+router.post("/api/users", protect, admin, createUser);
 router.get("/", protect, admin, getUsers);
 router.get("/:id", protect, admin, getUserById);
 router.put("/:id", protect, admin, updateUser);
