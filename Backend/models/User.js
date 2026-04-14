@@ -36,6 +36,16 @@ const userSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        countryCode: {
+            type: String,
+            default: "+91",
+            trim: true,
+        },
+        phone: {
+            type: String,
+            trim: true,
+            default: null,
+        },
     },
     { timestamps: true }
 );

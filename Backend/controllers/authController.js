@@ -6,6 +6,7 @@ import Subscription from "../models/Subscription.js";
 import Usage from "../models/Usage.js";
 import { signToken } from "../config/jwt.js";
 import { sendVerificationEmail, sendWelcomeEmail } from "../config/email.js";
+import { sendWelcomeSMS } from "../config/sms.js";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -25,7 +26,7 @@ const generateEmailToken = () => {
 // @access  Public
 export const register = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password, countryCode, phone } = req.body;
 
         // Check if fully registered user already exists
         const existingUser = await User.findOne({ email });
@@ -48,6 +49,8 @@ export const register = async (req, res) => {
                 name,
                 email,
                 password: hashedPassword,
+                countryCode: countryCode || "+91",
+                phone: phone || null,
                 emailVerificationToken: hashedToken,
                 emailVerificationExpires: expires,
             },
@@ -112,6 +115,8 @@ export const verifyEmail = async (req, res) => {
             name: pendingUser.name,
             email: pendingUser.email,
             password: pendingUser.password,
+            countryCode: pendingUser.countryCode,
+            phone: pendingUser.phone,
             authProvider: "local",
             emailVerified: true,
         });
@@ -131,6 +136,15 @@ export const verifyEmail = async (req, res) => {
             await sendWelcomeEmail(user.email, user.name);
         } catch (emailError) {
             console.error("[verifyEmail] Failed to send welcome email:", emailError.message);
+        }
+
+        // Send welcome SMS if the user provided a phone number
+        if (user.phone) {
+            try {
+                await sendWelcomeSMS(user.phone, user.countryCode, user.name);
+            } catch (smsError) {
+                console.error("[verifyEmail] Failed to send welcome SMS:", smsError.message);
+            }
         }
 
         console.log(`[verifyEmail] Email verified & user created for: ${user.email}`);

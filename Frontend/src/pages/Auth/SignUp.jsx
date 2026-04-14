@@ -1,24 +1,68 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, ArrowRight, Star, AlertCircle, Check, Loader2 } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Star, AlertCircle, Check, Loader2, ChevronDown, Phone } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 const SignUp = () => {
     const navigate = useNavigate();
     const { register } = useAuth();
+    const dropdownRef = useRef(null);
     const [formData, setFormData] = useState({
         fullName: "",
         email: "",
+        countryCode: "+91",
+        phone: "",
         password: "",
         confirmPassword: "",
     });
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+    const [countrySearch, setCountrySearch] = useState("");
     const [errors, setErrors] = useState({});
     const [touched, setTouched] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const [apiError, setApiError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
+
+    // Country codes list
+    const countryCodes = [
+        { code: "+91", country: "India", flag: "🇮🇳" },
+        { code: "+1", country: "United States", flag: "🇺🇸" },
+        { code: "+44", country: "United Kingdom", flag: "🇬🇧" },
+        { code: "+61", country: "Australia", flag: "🇦🇺" },
+        { code: "+86", country: "China", flag: "🇨🇳" },
+        { code: "+81", country: "Japan", flag: "🇯🇵" },
+        { code: "+49", country: "Germany", flag: "🇩🇪" },
+        { code: "+33", country: "France", flag: "🇫🇷" },
+        { code: "+39", country: "Italy", flag: "🇮🇹" },
+        { code: "+55", country: "Brazil", flag: "🇧🇷" },
+        { code: "+7", country: "Russia", flag: "🇷🇺" },
+        { code: "+82", country: "South Korea", flag: "🇰🇷" },
+        { code: "+34", country: "Spain", flag: "🇪🇸" },
+        { code: "+52", country: "Mexico", flag: "🇲🇽" },
+        { code: "+62", country: "Indonesia", flag: "🇮🇩" },
+        { code: "+90", country: "Turkey", flag: "🇹🇷" },
+        { code: "+966", country: "Saudi Arabia", flag: "🇸🇦" },
+    ];
+
+    const filteredCountryCodes = countryCodes.filter(
+        (c) =>
+            c.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
+            c.code.includes(countrySearch)
+    );
+
+    // Close country dropdown on click outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+                setShowCountryDropdown(false);
+                setCountrySearch("");
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     // Validation functions
     const validateFullName = (name) => {
@@ -32,6 +76,13 @@ const SignUp = () => {
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         if (!email) return "Email is required";
         if (!emailRegex.test(email)) return "Please enter a valid email address";
+        return "";
+    };
+
+    const validatePhone = (phone) => {
+        if (!phone) return ""; // Phone is optional
+        if (!/^[0-9]+$/.test(phone)) return "Phone number must contain only digits";
+        if (phone.length !== 10) return "Phone number must be exactly 10 digits";
         return "";
     };
 
@@ -77,6 +128,10 @@ const SignUp = () => {
             const emailError = validateEmail(formData.email);
             if (emailError) newErrors.email = emailError;
         }
+        if (touched.phone) {
+            const phoneError = validatePhone(formData.phone);
+            if (phoneError) newErrors.phone = phoneError;
+        }
         if (touched.password) {
             const passwordError = validatePassword(formData.password);
             if (passwordError) newErrors.password = passwordError;
@@ -101,18 +156,20 @@ const SignUp = () => {
         setApiError("");
 
         // Touch all fields to show errors
-        setTouched({ fullName: true, email: true, password: true, confirmPassword: true });
+        setTouched({ fullName: true, email: true, phone: true, password: true, confirmPassword: true });
 
         // Validate all fields
         const nameError = validateFullName(formData.fullName);
         const emailError = validateEmail(formData.email);
+        const phoneError = validatePhone(formData.phone);
         const passwordError = validatePassword(formData.password);
         const confirmError = validateConfirmPassword(formData.confirmPassword, formData.password);
 
-        if (nameError || emailError || passwordError || confirmError) {
+        if (nameError || emailError || phoneError || passwordError || confirmError) {
             setErrors({
                 fullName: nameError,
                 email: emailError,
+                phone: phoneError,
                 password: passwordError,
                 confirmPassword: confirmError,
             });
@@ -124,6 +181,8 @@ const SignUp = () => {
             await register({
                 name: formData.fullName,
                 email: formData.email,
+                countryCode: formData.countryCode,
+                phone: formData.phone || undefined,
                 password: formData.password,
             });
             console.log("[SignUp.jsx] Account Created Successfully");
@@ -275,6 +334,93 @@ const SignUp = () => {
                                     <div className="flex items-center gap-1.5 mt-1.5 text-red-500">
                                         <AlertCircle className="w-3.5 h-3.5" />
                                         <span className="text-xs">{errors.email}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Phone Number */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number <span className="text-gray-400 font-normal">(optional)</span></label>
+                                <div className="flex gap-2">
+                                    {/* Country Code Dropdown */}
+                                    <div className="relative" ref={dropdownRef}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                                            className="flex items-center gap-1 h-11 px-3 text-sm bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all min-w-[90px]"
+                                        >
+                                            <span className="text-base">{countryCodes.find(c => c.code === formData.countryCode)?.flag || "🌍"}</span>
+                                            <span className="text-gray-700 font-medium">{formData.countryCode}</span>
+                                            <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showCountryDropdown ? "rotate-180" : ""}`} />
+                                        </button>
+                                        {/* Dropdown */}
+                                        {showCountryDropdown && (
+                                            <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
+                                                {/* Search */}
+                                                <div className="p-2 border-b border-gray-100">
+                                                    <input
+                                                        type="text"
+                                                        value={countrySearch}
+                                                        onChange={(e) => setCountrySearch(e.target.value)}
+                                                        placeholder="Search country..."
+                                                        className="w-full h-8 px-3 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                                                        autoFocus
+                                                    />
+                                                </div>
+                                                {/* Options */}
+                                                <div className="max-h-48 overflow-y-auto">
+                                                    {filteredCountryCodes.map((c) => (
+                                                        <button
+                                                            key={c.code}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setFormData({ ...formData, countryCode: c.code });
+                                                                setShowCountryDropdown(false);
+                                                                setCountrySearch("");
+                                                            }}
+                                                            className={`w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-emerald-50 transition-colors ${
+                                                                formData.countryCode === c.code ? "bg-emerald-50 text-emerald-700" : "text-gray-700"
+                                                            }`}
+                                                        >
+                                                            <span className="text-base">{c.flag}</span>
+                                                            <span className="flex-1 text-left">{c.country}</span>
+                                                            <span className="text-gray-400 font-mono text-xs">{c.code}</span>
+                                                        </button>
+                                                    ))}
+                                                    {filteredCountryCodes.length === 0 && (
+                                                        <p className="text-xs text-gray-400 text-center py-3">No country found</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    {/* Phone Input */}
+                                    <div className="relative flex-1">
+                                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <input
+                                            type="tel"
+                                            name="phone"
+                                            value={formData.phone}
+                                            onChange={(e) => {
+                                                // Only allow digits, max 10
+                                                const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                                                setFormData({ ...formData, phone: val });
+                                            }}
+                                            onBlur={handleBlur}
+                                            placeholder="9876543210"
+                                            className={`w-full h-11 pl-9 pr-4 text-sm bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 transition-all ${
+                                                errors.phone
+                                                    ? "border-red-400 focus:ring-red-500/20 focus:border-red-500"
+                                                    : "border-gray-200 focus:ring-emerald-500/20 focus:border-emerald-500"
+                                            }`}
+                                            maxLength={10}
+                                        />
+                                    </div>
+                                </div>
+                                {errors.phone && (
+                                    <div className="flex items-center gap-1.5 mt-1.5 text-red-500">
+                                        <AlertCircle className="w-3.5 h-3.5" />
+                                        <span className="text-xs">{errors.phone}</span>
                                     </div>
                                 )}
                             </div>

@@ -18,6 +18,16 @@ const pendingUserSchema = new mongoose.Schema(
             type: String,
             required: [true, "Password is required"],
         },
+        countryCode: {
+            type: String,
+            default: "+91",
+            trim: true,
+        },
+        phone: {
+            type: String,
+            trim: true,
+            default: null,
+        },
         emailVerificationToken: {
             type: String,
             required: true,
