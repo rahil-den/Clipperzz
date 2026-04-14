@@ -9,8 +9,8 @@ const subscriptionSchema = new mongoose.Schema(
         },
         plan: {
             type: String,
-            enum: ["free", "premium", "pro"],
-            default: "free",
+            enum: ["starter", "pro", "enterprise"],
+            default: "starter",
         },
         status: {
             type: String,
@@ -23,6 +23,14 @@ const subscriptionSchema = new mongoose.Schema(
         },
         endDate: {
             type: Date,
+        },
+        stripeSubscriptionId: {
+            type: String,
+            default: null,
+        },
+        stripePriceId: {
+            type: String,
+            default: null,
         },
     },
     { timestamps: true }

@@ -12,6 +12,7 @@ import userRoutes         from "./routes/userRoutes.js";
 import videoRoutes        from "./routes/videoRoutes.js";
 import clipRoutes         from "./routes/clipRoutes.js";
 import subscriptionRoutes from "./routes/subscriptionRoutes.js";
+import stripeRoutes       from "./routes/stripeRoutes.js";
 import usageRoutes        from "./routes/usageRoutes.js";
 import jobRoutes          from "./routes/jobRoutes.js";
 import logRoutes          from "./routes/logRoutes.js";
@@ -22,6 +23,10 @@ const PORT = process.env.PORT || 5000;
 
 // ── Global Middleware ─────────────────────────────────────────────────────────
 app.use(cors());
+
+// ── Stripe Routes (MUST be before JSON parser for webhooks) ───────────────
+app.use("/api/stripe",        stripeRoutes);
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 

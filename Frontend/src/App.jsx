@@ -16,6 +16,10 @@ import Login from './pages/Auth/Login'
 import ForgotPassword from './pages/Auth/ForgotPassword'
 import VerifyEmail from './pages/Auth/VerifyEmail'
 
+// Legal Pages
+import Terms from './pages/Terms'
+import Privacy from './pages/Privacy'
+
 // Admin Dashboard
 import AdminDashboard from './pages/AdminDashboard'
 import AdminHome from './pages/admin-dashboard/AdminHome'
@@ -45,6 +49,10 @@ const App = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
+
+      {/* Legal Routes */}
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/privacy" element={<Privacy />} />
 
       {/* User Dashboard Routes */}
       <Route 
