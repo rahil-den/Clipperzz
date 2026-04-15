@@ -6,6 +6,7 @@ import {
     verifyEmail,
     resendVerification,
 } from "../controllers/authController.js";
+import { googleAuth } from "../controllers/googleAuthController.js";
 
 import { protect } from "../middleware/auth.js";
 
@@ -18,5 +19,8 @@ router.get("/me", protect, getMe);
 // Email verification
 router.get("/verify-email", verifyEmail);
 router.post("/resend-verification", resendVerification);
+
+// Google OAuth
+router.post("/google", googleAuth);
 
 export default router;

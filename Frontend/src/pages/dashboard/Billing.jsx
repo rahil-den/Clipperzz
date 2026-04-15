@@ -1,15 +1,12 @@
 import { useState, useEffect } from "react";
-import { CreditCard, Check, ArrowUpRight, Download, FileText, X, Loader2 } from "lucide-react";
+import { CreditCard, Check, ArrowUpRight, FileText, Loader2, ExternalLink } from "lucide-react";
 import { cn } from "../../lib/utils";
-import { getMySubscription } from "../../services/api";
+import { getMySubscription, createStripeCheckoutSession, createStripePortalSession } from "../../services/api";
 
 const Billing = () => {
     const [subscription, setSubscription] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [showUpdateModal, setShowUpdateModal] = useState(false);
-    const [cardNumber, setCardNumber] = useState("");
-    const [expiry, setExpiry] = useState("");
-    const [cvv, setCvv] = useState("");
+    const [isStripeLoading, setIsStripeLoading] = useState(false);
 
     useEffect(() => {
         const fetchSubscription = async () => {
@@ -53,12 +50,32 @@ const Billing = () => {
         },
     ];
 
-    const invoices = [
-        { id: "INV-2024-001", date: "Jan 15, 2024", amount: "$29.00", status: "Paid" },
-        { id: "INV-2023-012", date: "Dec 15, 2023", amount: "$29.00", status: "Paid" },
-        { id: "INV-2023-011", date: "Nov 15, 2023", amount: "$29.00", status: "Paid" },
-        { id: "INV-2023-010", date: "Oct 15, 2023", amount: "$29.00", status: "Paid" },
-    ];
+    const handleUpgrade = async (planName) => {
+        const plan = planName.toLowerCase();
+        try {
+            setIsStripeLoading(true);
+            const data = await createStripeCheckoutSession(plan);
+            if (data.url) window.location.href = data.url;
+        } catch (error) {
+            console.error("Failed to start checkout:", error);
+            alert("Failed to connect to billing provider. Please verify your Stripe setup.");
+        } finally {
+            setIsStripeLoading(false);
+        }
+    };
+
+    const handleManageBilling = async () => {
+        try {
+            setIsStripeLoading(true);
+            const data = await createStripePortalSession();
+            if (data.url) window.location.href = data.url;
+        } catch (error) {
+            console.error("Failed to start portal:", error);
+            alert("Could not load billing portal. Either you are not a premium customer yet, or setup is incomplete.");
+        } finally {
+            setIsStripeLoading(false);
+        }
+    };
 
     if (isLoading) {
         return (
@@ -106,13 +123,23 @@ const Billing = () => {
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-2xl hover:bg-gray-50 transition-colors">
-                        Cancel Subscription
+                    <button 
+                        onClick={handleManageBilling}
+                        disabled={isStripeLoading}
+                        className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-2xl hover:bg-gray-50 transition-colors disabled:opacity-50"
+                    >
+                        Manage Billing
                     </button>
-                    <button className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-2xl transition-colors shadow-md shadow-purple-200">
-                        Upgrade Plan
-                        <ArrowUpRight className="w-4 h-4" />
-                    </button>
+                    {(subscription?.plan === "starter" || !subscription) && (
+                        <button 
+                            onClick={() => handleUpgrade("pro")}
+                            disabled={isStripeLoading}
+                            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-2xl transition-colors shadow-md shadow-purple-200 disabled:opacity-50"
+                        >
+                            {isStripeLoading ? "Loading..." : "Upgrade Plan"}
+                            {!isStripeLoading && <ArrowUpRight className="w-4 h-4" />}
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -149,15 +176,16 @@ const Billing = () => {
                                 ))}
                             </ul>
                             <button
+                                onClick={() => handleUpgrade(plan.name)}
                                 className={cn(
                                     "w-full py-2.5 text-sm font-medium rounded-2xl transition-all duration-200",
                                     plan.isCurrent
                                         ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                                         : "bg-gray-100 text-gray-700 hover:bg-emerald-500 hover:text-white hover:shadow-md hover:shadow-emerald-200 active:scale-[0.98]"
                                 )}
-                                disabled={plan.isCurrent}
+                                disabled={plan.isCurrent || isStripeLoading}
                             >
-                                {plan.isCurrent ? "Current Plan" : plan.name === "Starter" ? "Downgrade" : "Upgrade"}
+                                {plan.isCurrent ? "Current Plan" : plan.name === "Starter" ? "Downgrade in Portal" : "Upgrade via Stripe"}
                             </button>
                         </div>
                     ))}
@@ -167,149 +195,26 @@ const Billing = () => {
             <div className="bg-white rounded-2xl border border-gray-100 p-6">
                 <div className="flex items-center gap-2 mb-4">
                     <CreditCard className="w-5 h-5 text-emerald-500" />
-                    <h3 className="text-lg font-semibold text-gray-900">Payment Method</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Payment & Invoices</h3>
                 </div>
-                <div className="bg-gray-50 rounded-2xl p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="px-3 py-2 bg-gray-900 text-white text-xs font-bold rounded-xl">
-                            VISA
-                        </div>
-                        <div>
-                            <p className="text-sm font-medium text-gray-900">•••• •••• •••• 4242</p>
-                            <p className="text-xs text-gray-500">Expires 12/2025</p>
-                        </div>
+                <div className="bg-gray-50 rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                    <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-4">
+                        <FileText className="w-6 h-6 text-gray-400" />
                     </div>
+                    <h4 className="text-gray-900 font-medium mb-2">Manage your billing details securely via Stripe</h4>
+                    <p className="text-sm text-gray-500 mb-6 max-w-sm">
+                        Update your payment methods, download previous invoices, and view billing history in the customer portal.
+                    </p>
                     <button
-                        onClick={() => setShowUpdateModal(true)}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
+                        onClick={handleManageBilling}
+                        disabled={isStripeLoading}
+                        className="inline-flex items-center gap-2 px-6 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-50"
                     >
-                        Update
+                        <ExternalLink className="w-4 h-4" />
+                        Open Stripe Portal
                     </button>
                 </div>
             </div>
-
-            <div className="bg-white rounded-2xl border border-gray-100 p-6">
-                <div className="flex items-center gap-2 mb-6">
-                    <FileText className="w-5 h-5 text-gray-400" />
-                    <h3 className="text-lg font-semibold text-gray-900">Billing History</h3>
-                </div>
-                <table className="w-full">
-                    <thead>
-                        <tr className="text-left text-xs text-gray-400 border-b border-gray-100">
-                            <th className="pb-3 font-normal">Invoice</th>
-                            <th className="pb-3 font-normal">Date</th>
-                            <th className="pb-3 font-normal">Amount</th>
-                            <th className="pb-3 font-normal">Status</th>
-                            <th className="pb-3 font-normal text-right">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {invoices.map((invoice, index) => (
-                            <tr
-                                key={invoice.id}
-                                className={cn(
-                                    "text-sm",
-                                    index !== invoices.length - 1 && "border-b border-gray-50"
-                                )}
-                            >
-                                <td className="py-4">
-                                    <span className="font-medium text-emerald-600">{invoice.id}</span>
-                                </td>
-                                <td className="py-4 text-gray-500">{invoice.date}</td>
-                                <td className="py-4 font-medium text-gray-900">{invoice.amount}</td>
-                                <td className="py-4">
-                                    <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">
-                                        {invoice.status}
-                                    </span>
-                                </td>
-                                <td className="py-4 text-right">
-                                    <button className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-gray-500 hover:bg-emerald-100 hover:text-gray-900 rounded-xl transition-all ml-auto">
-                                        <Download className="w-4 h-4" />
-                                        PDF
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {showUpdateModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-lg font-semibold text-gray-900">Update Payment Method</h3>
-                            <button
-                                onClick={() => setShowUpdateModal(false)}
-                                className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
-                            >
-                                <X className="w-5 h-5 text-gray-500" />
-                            </button>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Card Number</label>
-                                <input
-                                    type="text"
-                                    value={cardNumber}
-                                    onChange={(e) => setCardNumber(e.target.value)}
-                                    placeholder="1234 5678 9012 3456"
-                                    className="w-full px-4 py-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Expiry Date</label>
-                                    <input
-                                        type="text"
-                                        value={expiry}
-                                        onChange={(e) => setExpiry(e.target.value)}
-                                        placeholder="MM/YY"
-                                        className="w-full px-4 py-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">CVV</label>
-                                    <input
-                                        type="text"
-                                        value={cvv}
-                                        onChange={(e) => setCvv(e.target.value)}
-                                        placeholder="123"
-                                        className="w-full px-4 py-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-3 pt-4">
-                                <button
-                                    onClick={() => setShowUpdateModal(false)}
-                                    className="flex-1 py-3 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        const cardData = {
-                                            cardNumber: cardNumber,
-                                            expiry: expiry,
-                                            cvv: cvv ? "***" : "",
-                                            updatedAt: new Date().toISOString(),
-                                        };
-                                        console.log("[Billing.jsx] Payment Method Updated:", cardData);
-                                        alert("Payment method updated successfully!");
-                                        setShowUpdateModal(false);
-                                    }}
-                                    className="flex-1 py-3 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-2xl transition-colors"
-                                >
-                                    Save Card
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

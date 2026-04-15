@@ -73,6 +73,14 @@ export const resendVerification = async (email) => {
   const res = await api.post("/auth/resend-verification", { email });
   return res.data;
 };
+
+export const googleLogin = async (credential) => {
+  const res = await api.post("/auth/google", { credential });
+  if (res.data.token) {
+    localStorage.setItem("token", res.data.token);
+  }
+  return res.data;
+};
 // ─── Users ───────────────────────────────────────────────────────────────────
 
 export const createUser = async (userData) => {
@@ -168,6 +176,18 @@ export const getMySubscription = async () => {
 
 export const updateSubscription = async (id, subscriptionData) => {
   const res = await api.put(`/subscriptions/${id}`, subscriptionData);
+  return res.data;
+};
+
+// ─── Stripe Billing ──────────────────────────────────────────────────────────
+
+export const createStripeCheckoutSession = async (plan) => {
+  const res = await api.post("/stripe/create-checkout-session", { plan });
+  return res.data;
+};
+
+export const createStripePortalSession = async () => {
+  const res = await api.post("/stripe/create-portal-session");
   return res.data;
 };
 

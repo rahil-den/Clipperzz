@@ -18,6 +18,10 @@ const Login = lazy(() => import('./pages/Auth/Login'))
 const ForgotPassword = lazy(() => import('./pages/Auth/ForgotPassword'))
 const VerifyEmail = lazy(() => import('./pages/Auth/VerifyEmail'))
 
+// Legal Pages (lazy)
+const Terms = lazy(() => import('./pages/Terms'))
+const Privacy = lazy(() => import('./pages/Privacy'))
+
 // Admin Dashboard (lazy)
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
 const AdminHome = lazy(() => import('./pages/admin-dashboard/AdminHome'))
@@ -70,6 +74,10 @@ const App = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
+
+      {/* Legal Routes */}
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/privacy" element={<Privacy />} />
 
       {/* User Dashboard Routes */}
       <Route 
