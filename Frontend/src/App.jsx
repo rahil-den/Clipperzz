@@ -1,41 +1,66 @@
-import React from 'react'
+import React, { Suspense, lazy } from 'react'
 import { Routes, Route } from 'react-router-dom'
-import Index from './pages'
-import Dashboard from './pages/Dashboard'
-import DashboardHome from './pages/dashboard/DashboardHome'
-import MyVideos from './pages/dashboard/MyVideos'
-import Clips from './pages/dashboard/Clips'
-import Usage from './pages/dashboard/Usage'
-import Templates from './pages/dashboard/Templates'
-import Billing from './pages/dashboard/Billing'
-import Settings from './pages/dashboard/Settings'
 
-// Auth Pages
-import SignUp from './pages/Auth/SignUp'
-import Login from './pages/Auth/Login'
-import ForgotPassword from './pages/Auth/ForgotPassword'
-import VerifyEmail from './pages/Auth/VerifyEmail'
+// Lazy-loaded Pages
+const Index = lazy(() => import('./pages'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const DashboardHome = lazy(() => import('./pages/dashboard/DashboardHome'))
+const MyVideos = lazy(() => import('./pages/dashboard/MyVideos'))
+const Clips = lazy(() => import('./pages/dashboard/Clips'))
+const Usage = lazy(() => import('./pages/dashboard/Usage'))
+const Templates = lazy(() => import('./pages/dashboard/Templates'))
+const Billing = lazy(() => import('./pages/dashboard/Billing'))
+const Settings = lazy(() => import('./pages/dashboard/Settings'))
 
-// Admin Dashboard
-import AdminDashboard from './pages/AdminDashboard'
-import AdminHome from './pages/admin-dashboard/AdminHome'
-import AdminUsers from './pages/admin-dashboard/Users'
-import AdminClips from './pages/admin-dashboard/Clips'
-import AdminPayments from './pages/admin-dashboard/Payments'
-import AdminReports from './pages/admin-dashboard/Reports'
-import AdminSettings from './pages/admin-dashboard/Settings'
-import AdminManagement from './pages/admin-dashboard/AdminManagement'
-import PlatformSettings from './pages/admin-dashboard/PlatformSettings'
-import SystemLogs from './pages/admin-dashboard/SystemLogs'
-import SuperTools from './pages/admin-dashboard/SuperTools'
-import UserReports from './pages/admin-dashboard/UserReports'
-import JobsQueue from './pages/admin-dashboard/JobsQueue'
-import RolesAccess from './pages/admin-dashboard/RolesAccess'
+// Auth Pages (lazy)
+const SignUp = lazy(() => import('./pages/Auth/SignUp'))
+const Login = lazy(() => import('./pages/Auth/Login'))
+const ForgotPassword = lazy(() => import('./pages/Auth/ForgotPassword'))
+const VerifyEmail = lazy(() => import('./pages/Auth/VerifyEmail'))
 
+// Admin Dashboard (lazy)
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
+const AdminHome = lazy(() => import('./pages/admin-dashboard/AdminHome'))
+const AdminUsers = lazy(() => import('./pages/admin-dashboard/Users'))
+const AdminClips = lazy(() => import('./pages/admin-dashboard/Clips'))
+const AdminPayments = lazy(() => import('./pages/admin-dashboard/Payments'))
+const AdminReports = lazy(() => import('./pages/admin-dashboard/Reports'))
+const AdminSettings = lazy(() => import('./pages/admin-dashboard/Settings'))
+const AdminManagement = lazy(() => import('./pages/admin-dashboard/AdminManagement'))
+const PlatformSettings = lazy(() => import('./pages/admin-dashboard/PlatformSettings'))
+const SystemLogs = lazy(() => import('./pages/admin-dashboard/SystemLogs'))
+const SuperTools = lazy(() => import('./pages/admin-dashboard/SuperTools'))
+const UserReports = lazy(() => import('./pages/admin-dashboard/UserReports'))
+const JobsQueue = lazy(() => import('./pages/admin-dashboard/JobsQueue'))
+const RolesAccess = lazy(() => import('./pages/admin-dashboard/RolesAccess'))
+
+// Static import — needed immediately for route protection
 import ProtectedRoute from './components/auth/ProtectedRoute'
+
+// Loading fallback component
+const LoadingFallback = () => (
+  <div style={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100vh',
+    background: '#0a0a0a',
+  }}>
+    <div style={{
+      width: '40px',
+      height: '40px',
+      border: '3px solid rgba(255,255,255,0.1)',
+      borderTop: '3px solid #6c63ff',
+      borderRadius: '50%',
+      animation: 'spin 0.8s linear infinite',
+    }} />
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+  </div>
+)
 
 const App = () => {
   return (
+    <Suspense fallback={<LoadingFallback />}>
     <Routes>
       {/* Landing Page */}
       <Route path="/" element={<Index />} />
@@ -96,6 +121,7 @@ const App = () => {
         <Route path="super-tools" element={<SuperTools />} />
       </Route>
     </Routes>
+    </Suspense>
   )
 }
 

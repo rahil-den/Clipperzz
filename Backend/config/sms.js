@@ -22,7 +22,7 @@ export const sendWelcomeSMS = async (toPhone, countryCode, userName) => {
     const firstName = userName.split(" ")[0];
     const fullNumber = `${countryCode}${toPhone}`;
 
-    const message = `🎉 Hey ${firstName}! Welcome to Clipperz!\n\nYour account is now live and ready to go. Start turning your long videos into viral short clips with the power of AI.\n\n🚀 Head to your dashboard to create your first clip!\n\n— Team Clipperz ⚡`;
+    const message = `🎉 Hey ${firstName}! Welcome to Clipperz!\n\nYour account is now live \n\n— Team Clipperz ⚡`;
 
     try {
         const response = await client.messages.create({
