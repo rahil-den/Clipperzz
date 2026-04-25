@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { ArrowRight, Star, CheckCircle, RefreshCw, XCircle, Mail } from "lucide-react";
 import { verifyEmail as apiVerifyEmail, resendVerification as apiResendVerification } from "../../services/api";
@@ -7,49 +7,47 @@ import { useAuth } from "../../context/AuthContext";
 const VerifyEmail = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { setUser } = useAuth();
+    const { setUser, setIsAuthenticated } = useAuth();
 
     const email = searchParams.get("email") || "";
     const token = searchParams.get("token") || "";
 
-    const [status, setStatus] = useState("idle"); // idle | verifying | success | error | pending
+    // Derive initial status synchronously so there is NEVER an idle flash.
+    // If a token is in the URL we know we're about to verify — show spinner immediately.
+    const [status, setStatus] = useState(() => token ? "verifying" : "pending");
     const [errorMessage, setErrorMessage] = useState("");
     const [resendLoading, setResendLoading] = useState(false);
     const [resendMessage, setResendMessage] = useState("");
 
-    // Auto-verify when a token is present in the URL
-    const runVerification = useCallback(async () => {
-        if (!token) {
-            // No token — user just registered and is waiting to click the email link
-            setStatus("pending");
-            return;
-        }
-
-        setStatus("verifying");
-        try {
-            const data = await apiVerifyEmail(token);
-            // data = { message, token (JWT), user }
-            if (data.user) {
-                setUser(data.user);
-            }
-            setStatus("success");
-
-            // Give the user 2 s to see the success animation, then redirect
-            setTimeout(() => {
-                navigate("/dashboard", { replace: true });
-            }, 2000);
-        } catch (err) {
-            setErrorMessage(
-                err.response?.data?.message ||
-                "Verification failed. The link may have expired. Please request a new one."
-            );
-            setStatus("error");
-        }
-    }, [token, navigate, setUser]);
-
+    // Run verification once on mount (only when token exists)
     useEffect(() => {
-        runVerification();
-    }, [runVerification]);
+        if (!token) return; // already set to "pending" above
+
+        let cancelled = false;
+        (async () => {
+            try {
+                const data = await apiVerifyEmail(token);
+                if (cancelled) return;
+                if (data.user) {
+                    setUser(data.user);
+                    setIsAuthenticated(true);
+                }
+                setStatus("success");
+                // 2s for user to see success, then redirect
+                setTimeout(() => navigate("/dashboard", { replace: true }), 2000);
+            } catch (err) {
+                if (cancelled) return;
+                setErrorMessage(
+                    err.response?.data?.message ||
+                    "Verification failed. The link may have expired. Please request a new one."
+                );
+                setStatus("error");
+            }
+        })();
+
+        return () => { cancelled = true; };
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
 
     const handleResend = async () => {
         if (!email) {

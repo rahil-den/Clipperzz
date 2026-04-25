@@ -6,8 +6,7 @@ import RecentActivity from "../../components/dashboard-user/RecentActivity";
 import UsageLimits from "../../components/dashboard-user/UsageLimits";
 import RecentClips from "../../components/dashboard-user/RecentClips";
 import { useAuth } from "../../context/AuthContext";
-import { getVideos, getClips, getAllUsage } from "../../services/api";
-
+import { getVideos, getClips, getMyUsage } from "../../services/api";
 const DashboardHome = () => {
     const { user } = useAuth();
     const [statsData, setStatsData] = useState({
@@ -26,10 +25,10 @@ const DashboardHome = () => {
                 const [videos, clips, usage] = await Promise.all([
                     getVideos(),
                     getClips(),
-                    getAllUsage()
+                    getMyUsage()
                 ]);
 
-                const usageRecord = Array.isArray(usage) ? usage[0] : usage;
+                const usageRecord = usage || {};
                 const clipsData = Array.isArray(clips) ? clips : (clips.clips || []);
 
                 setStatsData({

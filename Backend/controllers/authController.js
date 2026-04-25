@@ -122,7 +122,7 @@ export const verifyEmail = async (req, res) => {
         });
 
         // Create default subscription & usage records
-        await Subscription.create({ user: user._id, plan: "free" });
+        await Subscription.create({ user: user._id, plan: "starter" });
         await Usage.create({ user: user._id });
 
         // Clean up the pending entry

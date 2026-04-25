@@ -2,6 +2,13 @@ import { useState } from "react";
 import { Play, Download, Edit2, Share2, Bookmark, Clock } from "lucide-react";
 import { cn } from "../../lib/utils";
 
+const defaultThumbnails = [
+    "https://images.unsplash.com/photo-1616469829581-73993eb86b02?w=800&q=80",
+    "https://images.unsplash.com/photo-1598899134739-24c46f58b8c0?w=800&q=80",
+    "https://images.unsplash.com/photo-1542204165-65bf26472b9b?w=800&q=80",
+    "https://images.unsplash.com/photo-1516280440502-869224424345?w=800&q=80",
+];
+
 const ClipCard = ({
     id,
     thumbnail,

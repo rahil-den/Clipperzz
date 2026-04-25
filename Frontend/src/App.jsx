@@ -1,7 +1,11 @@
 import React, { Suspense, lazy } from 'react'
 import { Routes, Route } from 'react-router-dom'
 
-// Lazy-loaded Pages
+// ─── Static imports (needed immediately for route guards) ────────────────────
+import ProtectedRoute from './components/auth/ProtectedRoute'
+import GuestRoute from './components/auth/GuestRoute'
+
+// ─── Lazy-loaded Pages ───────────────────────────────────────────────────────
 const Index = lazy(() => import('./pages'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const DashboardHome = lazy(() => import('./pages/dashboard/DashboardHome'))
@@ -38,23 +42,23 @@ const UserReports = lazy(() => import('./pages/admin-dashboard/UserReports'))
 const JobsQueue = lazy(() => import('./pages/admin-dashboard/JobsQueue'))
 const RolesAccess = lazy(() => import('./pages/admin-dashboard/RolesAccess'))
 
-// Static import — needed immediately for route protection
-import ProtectedRoute from './components/auth/ProtectedRoute'
+// 404
+const NotFound = lazy(() => import('./pages/NotFound'))
 
-// Loading fallback component
+// ─── Suspense spinner ────────────────────────────────────────────────────────
 const LoadingFallback = () => (
   <div style={{
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     height: '100vh',
-    background: '#0a0a0a',
+    background: '#f9fafb',
   }}>
     <div style={{
       width: '40px',
       height: '40px',
-      border: '3px solid rgba(255,255,255,0.1)',
-      borderTop: '3px solid #6c63ff',
+      border: '3px solid rgba(0,0,0,0.08)',
+      borderTop: '3px solid #10b981',
       borderRadius: '50%',
       animation: 'spin 0.8s linear infinite',
     }} />
@@ -65,73 +69,150 @@ const LoadingFallback = () => (
 const App = () => {
   return (
     <Suspense fallback={<LoadingFallback />}>
-    <Routes>
-      {/* Landing Page */}
-      <Route path="/" element={<Index />} />
+      <Routes>
 
-      {/* Auth Routes */}
-      <Route path="/signup" element={<SignUp />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/verify-email" element={<VerifyEmail />} />
+        {/* ── Public ─────────────────────────────────────────────────────── */}
+        <Route path="/" element={<Index />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
 
-      {/* Legal Routes */}
-      <Route path="/terms" element={<Terms />} />
-      <Route path="/privacy" element={<Privacy />} />
+        {/* ── Auth pages — GuestRoute redirects already-logged-in users ──── */}
+        <Route path="/signup" element={
+          <GuestRoute><SignUp /></GuestRoute>
+        } />
+        <Route path="/login" element={
+          <GuestRoute><Login /></GuestRoute>
+        } />
+        <Route path="/forgot-password" element={
+          <GuestRoute><ForgotPassword /></GuestRoute>
+        } />
+        {/*
+          /verify-email is intentionally NOT wrapped in GuestRoute.
+          A logged-in user should still be able to hit this page if they
+          clicked an old verification link in their email.
+        */}
+        <Route path="/verify-email" element={<VerifyEmail />} />
 
-      {/* User Dashboard Routes */}
-      <Route 
-        path="/dashboard" 
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<DashboardHome />} />
-        <Route path="videos" element={<MyVideos />} />
-        <Route path="clips" element={<Clips />} />
-        <Route path="usage" element={<Usage />} />
-        <Route path="templates" element={<Templates />} />
-        <Route path="billing" element={<Billing />} />
-        <Route path="settings" element={<Settings />} />
-      </Route>
-
-      {/* Admin Dashboard Routes */}
-      <Route 
-        path="/admin" 
-        element={
-          <ProtectedRoute requiredRoles={["admin", "superadmin"]}>
-            <AdminDashboard />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<AdminHome />} />
-        <Route path="users" element={<AdminUsers />} />
-        <Route path="clips" element={<AdminClips />} />
-        <Route path="payments" element={<AdminPayments />} />
-        <Route path="reports" element={<AdminReports />} />
-        <Route path="user-reports" element={<UserReports />} />
-        <Route path="jobs-queue" element={<JobsQueue />} />
-        <Route path="settings" element={<AdminSettings />} />
-        {/* Super Admin Only Routes */}
-        <Route 
-          path="admin-management" 
+        {/* ── User Dashboard — only non-admin roles ───────────────────────── */}
+        {/*
+          requiredRoles blocks admins: if logged in as admin and you hit any
+          /dashboard URL, ProtectedRoute redirects you to /admin instead.
+        */}
+        <Route
+          path="/dashboard"
           element={
-            <ProtectedRoute requiredRoles={["superadmin"]}>
+            <ProtectedRoute requiredRoles={['user', 'premium', 'pro']}>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={
+            <ProtectedRoute requiredRoles={['user', 'premium', 'pro']}><DashboardHome /></ProtectedRoute>
+          } />
+          <Route path="videos" element={
+            <ProtectedRoute requiredRoles={['user', 'premium', 'pro']}><MyVideos /></ProtectedRoute>
+          } />
+          <Route path="clips" element={
+            <ProtectedRoute requiredRoles={['user', 'premium', 'pro']}><Clips /></ProtectedRoute>
+          } />
+          <Route path="usage" element={
+            <ProtectedRoute requiredRoles={['user', 'premium', 'pro']}><Usage /></ProtectedRoute>
+          } />
+          <Route path="templates" element={
+            <ProtectedRoute requiredRoles={['user', 'premium', 'pro']}><Templates /></ProtectedRoute>
+          } />
+          <Route path="billing" element={
+            <ProtectedRoute requiredRoles={['user', 'premium', 'pro']}><Billing /></ProtectedRoute>
+          } />
+          <Route path="settings" element={
+            <ProtectedRoute requiredRoles={['user', 'premium', 'pro']}><Settings /></ProtectedRoute>
+          } />
+        </Route>
+
+        {/* ── Admin Dashboard ─────────────────────────────────────────────── */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute requiredRoles={['admin', 'superadmin']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={
+            <ProtectedRoute requiredRoles={['admin', 'superadmin']}>
+              <AdminHome />
+            </ProtectedRoute>
+          } />
+          <Route path="users" element={
+            <ProtectedRoute requiredRoles={['admin', 'superadmin']}>
+              <AdminUsers />
+            </ProtectedRoute>
+          } />
+          <Route path="clips" element={
+            <ProtectedRoute requiredRoles={['admin', 'superadmin']}>
+              <AdminClips />
+            </ProtectedRoute>
+          } />
+          <Route path="payments" element={
+            <ProtectedRoute requiredRoles={['admin', 'superadmin']}>
+              <AdminPayments />
+            </ProtectedRoute>
+          } />
+          <Route path="reports" element={
+            <ProtectedRoute requiredRoles={['admin', 'superadmin']}>
+              <AdminReports />
+            </ProtectedRoute>
+          } />
+          <Route path="user-reports" element={
+            <ProtectedRoute requiredRoles={['admin', 'superadmin']}>
+              <UserReports />
+            </ProtectedRoute>
+          } />
+          <Route path="jobs-queue" element={
+            <ProtectedRoute requiredRoles={['admin', 'superadmin']}>
+              <JobsQueue />
+            </ProtectedRoute>
+          } />
+          <Route path="settings" element={
+            <ProtectedRoute requiredRoles={['admin', 'superadmin']}>
+              <AdminSettings />
+            </ProtectedRoute>
+          } />
+          <Route path="roles-access" element={
+            <ProtectedRoute requiredRoles={['admin', 'superadmin']}>
+              <RolesAccess />
+            </ProtectedRoute>
+          } />
+          <Route path="platform-settings" element={
+            <ProtectedRoute requiredRoles={['admin', 'superadmin']}>
+              <PlatformSettings />
+            </ProtectedRoute>
+          } />
+          <Route path="system-logs" element={
+            <ProtectedRoute requiredRoles={['admin', 'superadmin']}>
+              <SystemLogs />
+            </ProtectedRoute>
+          } />
+
+          {/* ── Superadmin-only routes ─────────────────────────────────── */}
+          <Route path="admin-management" element={
+            <ProtectedRoute requiredRoles={['superadmin']}>
               <AdminManagement />
             </ProtectedRoute>
-          } 
-        />
-        <Route path="roles-access" element={<RolesAccess />} />
-        <Route path="platform-settings" element={<PlatformSettings />} />
-        <Route path="system-logs" element={<SystemLogs />} />
-        <Route path="super-tools" element={<SuperTools />} />
-      </Route>
-    </Routes>
+          } />
+          <Route path="super-tools" element={
+            <ProtectedRoute requiredRoles={['superadmin']}>
+              <SuperTools />
+            </ProtectedRoute>
+          } />
+        </Route>
+
+        {/* ── 404 — catch all unmatched routes ────────────────────────────── */}
+        <Route path="*" element={<NotFound />} />
+
+      </Routes>
     </Suspense>
   )
 }
 
 export default App
-

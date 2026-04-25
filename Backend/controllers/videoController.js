@@ -18,6 +18,30 @@ export const createVideo = async (req, res) => {
             duration,
         });
 
+        // Trigger the AI Model Service worker
+        try {
+            const modelUrl = process.env.MODEL_SERVICE_URL || 'http://localhost:5001';
+            const response = await fetch(`${modelUrl}/api/process`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    url: sourceUrl, 
+                    videoId: video._id, 
+                    userId: req.user._id 
+                })
+            });
+            const data = await response.json();
+            if (data && data.jobId) {
+                video.jobId = data.jobId;
+                await video.save();
+                console.log(`[createVideo] Triggered ModelService for video ${video._id}, jobId: ${data.jobId}`);
+            } else {
+                console.log(`[createVideo] Triggered ModelService for video ${video._id}, but no jobId returned`);
+            }
+        } catch (modelErr) {
+            console.error(`[createVideo] Failed to trigger ModelService:`, modelErr);
+        }
+
         res.status(201).json(video);
     } catch (error) {
         console.error("[createVideo]", error);
@@ -58,7 +82,20 @@ export const getVideoById = async (req, res) => {
             return res.status(403).json({ message: "Not authorized" });
         }
 
-        res.json(video);
+        let progressData = null;
+        if (video.status === 'processing' && video.jobId) {
+            try {
+                const modelUrl = process.env.MODEL_SERVICE_URL || 'http://localhost:5001';
+                const response = await fetch(`${modelUrl}/api/status/${video.jobId}`);
+                if (response.ok) {
+                    progressData = await response.json();
+                }
+            } catch (err) {
+                console.error("[getVideoById] Failed to fetch progress from ModelService:", err.message);
+            }
+        }
+
+        res.json({ ...video.toObject(), progress: progressData });
     } catch (error) {
         console.error("[getVideoById]", error);
         res.status(500).json({ message: error.message || "Server Error" });
@@ -110,5 +147,44 @@ export const deleteVideo = async (req, res) => {
     } catch (error) {
         console.error("[deleteVideo]", error);
         res.status(500).json({ message: error.message || "Server Error" });
+    }
+};
+
+// @desc    Webhook for ModelService to push clips back
+// @route   POST /api/videos/webhook
+// @access  Public (Internal use)
+import Clip from "../models/Clip.js";
+export const handleVideoWebhook = async (req, res) => {
+    try {
+        const { videoId, userId, clips } = req.body;
+        
+        if (!videoId || !userId) {
+            return res.status(400).json({ message: "Missing required fields" });
+        }
+
+        // Update Video status to completed
+        await Video.findByIdAndUpdate(videoId, { status: "completed" });
+        
+        // Insert all clips into DB
+        if (clips && clips.length > 0) {
+            const clipDocs = clips.map((clip, index) => ({
+                user: userId,
+                video: videoId,
+                title: clip.clipName || `Clip ${index + 1}`,
+                clipUrl: "http://localhost:5001" + clip.downloadUrl,
+                duration: clip.duration || 15,
+                platform: ["shorts", "tiktok", "reels"], // Must be array of valid enums
+                clipScore: clip.score || Math.floor(Math.random() * (95 - 75 + 1) + 75), // temporary score if none
+                status: "ready"
+            }));
+            
+            await Clip.insertMany(clipDocs);
+            console.log(`[handleVideoWebhook] Successfully saved ${clips.length} clips for video ${videoId}`);
+        }
+        
+        res.status(200).json({ message: "Clips received and saved." });
+    } catch (err) {
+        console.error("[handleVideoWebhook]", err);
+        res.status(500).json({ message: "Error processing webhook." });
     }
 };

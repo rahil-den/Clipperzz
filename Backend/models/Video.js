@@ -30,6 +30,10 @@ const videoSchema = new mongoose.Schema(
             enum: ["processing", "completed", "failed"],
             default: "processing",
         },
+        jobId: {
+            type: String,
+            default: null,
+        },
     },
     { timestamps: true }
 );

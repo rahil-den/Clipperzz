@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Bell, Plus, ChevronDown, User, CreditCard, LogOut } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { useAuth } from "../../context/AuthContext";
 
 const Header = ({ onCreateClip }) => {
     const [showNotifications, setShowNotifications] = useState(false);
@@ -9,6 +10,12 @@ const Header = ({ onCreateClip }) => {
     const notificationRef = useRef(null);
     const userMenuRef = useRef(null);
     const navigate = useNavigate();
+    const { user, logout } = useAuth();
+
+    const handleLogout = () => {
+        logout();          // clears token from localStorage + resets AuthContext state
+        navigate("/login"); // redirect to login page
+    };
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -118,8 +125,8 @@ const Header = ({ onCreateClip }) => {
                     )}
                 >
                     <div className="px-5 py-4 border-b border-gray-100">
-                        <p className="font-semibold text-gray-900">Alex Johnson</p>
-                        <p className="text-sm text-gray-500 mt-0.5">alex@example.com</p>
+                        <p className="font-semibold text-gray-900">{user?.name || "User"}</p>
+                        <p className="text-sm text-gray-500 mt-0.5">{user?.email || ""}</p>
                     </div>
                     <div className="py-2">
                         <Link
@@ -141,7 +148,7 @@ const Header = ({ onCreateClip }) => {
                     </div>
                     <div className="py-2 border-t border-gray-100">
                         <button
-                            onClick={() => navigate("/")}
+                            onClick={handleLogout}
                             className="flex items-center gap-3 w-full px-5 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
                         >
                             <LogOut className="w-4 h-4" />

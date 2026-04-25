@@ -25,7 +25,13 @@ api.interceptors.response.use(
     const isAuthRoute = error.config?.url?.includes("/auth/login") || error.config?.url?.includes("/auth/register");
     
     if (error.response?.status === 401 && !isAuthRoute) {
-      localStorage.removeItem("token");
+      // Clear everything so the guard fast-fails on the next page load
+      localStorage.clear();
+      document.cookie.split(";").forEach((cookie) => {
+        const name = cookie.split("=")[0].trim();
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/api`;
+      });
       if (window.location.pathname !== "/login") {
         window.location.href = "/login";
       }
@@ -56,7 +62,17 @@ export const getMe = async () => {
 };
 
 export const logout = () => {
-  localStorage.removeItem("token");
+  // ── Wipe every key in localStorage ────────────────────────────────────────
+  localStorage.clear();
+
+  // ── Delete every cookie the browser exposes ───────────────────────────────
+  document.cookie.split(";").forEach((cookie) => {
+    const name = cookie.split("=")[0].trim();
+    // Expire the cookie on the root path and common sub-paths
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/api`;
+  });
+
   window.location.href = "/login";
 };
 
@@ -174,6 +190,13 @@ export const getMySubscription = async () => {
   return res.data;
 };
 
+export const getMySubscriptionHistory = async () => {
+  const res = await api.get("/subscriptions/me/history");
+  return res.data;
+};
+
+
+
 export const updateSubscription = async (id, subscriptionData) => {
   const res = await api.put(`/subscriptions/${id}`, subscriptionData);
   return res.data;
@@ -190,6 +213,19 @@ export const createStripePortalSession = async () => {
   const res = await api.post("/stripe/create-portal-session");
   return res.data;
 };
+
+// Sync current user's subscription from Stripe directly (no webhook needed)
+export const syncMySubscription = async () => {
+  const res = await api.post("/stripe/sync-subscription");
+  return res.data;
+};
+
+// Admin: sync ALL users' subscriptions from Stripe
+export const syncAllSubscriptions = async () => {
+  const res = await api.post("/stripe/sync-all-subscriptions");
+  return res.data;
+};
+
 
 // ─── Usage ───────────────────────────────────────────────────────────────────
 

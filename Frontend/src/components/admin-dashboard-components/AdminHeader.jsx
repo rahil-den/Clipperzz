@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Bell, Search, ChevronDown, User, LogOut, Shield, ToggleLeft, ToggleRight } from "lucide-react";
 import { cn } from "../../lib/utils";
 import RoleBadge from "./RoleBadge";
+import { useAuth } from "../../context/AuthContext";
 
 const AdminHeader = ({ isSuperAdmin = false, onToggleRole }) => {
     const [showNotifications, setShowNotifications] = useState(false);
@@ -10,6 +11,12 @@ const AdminHeader = ({ isSuperAdmin = false, onToggleRole }) => {
     const notificationRef = useRef(null);
     const userMenuRef = useRef(null);
     const navigate = useNavigate();
+    const { user, logout } = useAuth();
+
+    const handleLogout = () => {
+        logout();          // clears token from localStorage + resets AuthContext state
+        navigate("/login"); // redirect to login page
+    };
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -161,10 +168,10 @@ const AdminHeader = ({ isSuperAdmin = false, onToggleRole }) => {
                         )}
                     >
                         <div className="px-5 py-4 border-b border-gray-100">
-                            <p className="font-semibold text-gray-900">Admin User</p>
-                            <p className="text-sm text-gray-500 mt-0.5">admin@clipperz.io</p>
+                            <p className="font-semibold text-gray-900">{user?.name || "Admin"}</p>
+                            <p className="text-sm text-gray-500 mt-0.5">{user?.email || ""}</p>
                             <div className="mt-2">
-                                <RoleBadge role={isSuperAdmin ? "superadmin" : "admin"} />
+                                <RoleBadge role={user?.role || (isSuperAdmin ? "superadmin" : "admin")} />
                             </div>
                         </div>
                         <div className="py-2">
@@ -181,7 +188,7 @@ const AdminHeader = ({ isSuperAdmin = false, onToggleRole }) => {
                         </div>
                         <div className="py-2 border-t border-gray-100">
                             <button
-                                onClick={() => navigate("/")}
+                                onClick={handleLogout}
                                 className="flex items-center gap-3 w-full px-5 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150"
                             >
                                 <LogOut className="w-4 h-4" />

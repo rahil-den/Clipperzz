@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Link2, Upload, Sparkles, ArrowRight } from "lucide-react";
+import { createVideo } from "../../services/api";
 
 const CreateClip = ({ onGenerate }) => {
     const [url, setUrl] = useState("");
@@ -18,6 +19,7 @@ const CreateClip = ({ onGenerate }) => {
             });
             if (onGenerate) onGenerate(newVideo);
             setUrl("");
+            alert("Video successfully queued for AI processing!");
         } catch (err) {
             console.error("[CreateClip.jsx] Error creating video:", err);
             alert("Failed to create video. Please check the URL and try again.");

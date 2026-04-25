@@ -13,9 +13,10 @@ import {
   X,
   Grid3X3,
   List,
-  Edit
+  Edit,
+  ChevronLeft
 } from "lucide-react";
-import { getClips } from "../../services/api";
+import { getClips, deleteClip } from "../../services/api";
 import { cn } from "../../lib/utils";
 import ClipCard from "../../components/dashboard-user/ClipCard";
 
@@ -56,6 +57,29 @@ const Clips = () => {
 
   const formatViews = (num) => {
     return (num || 0).toLocaleString();
+  };
+
+  const handleDownload = (clipUrl) => {
+    if (!clipUrl) return;
+    const url = new URL(clipUrl);
+    url.searchParams.set('dl', '1');
+    window.location.href = url.toString();
+  };
+
+  const handlePlay = (clip) => {
+    setPreviewClip(clip);
+  };
+
+  const handleDeleteClip = async (clipId) => {
+    if (!window.confirm("Are you sure you want to delete this clip?")) return;
+    
+    try {
+      await deleteClip(clipId);
+      setClips((prev) => prev.filter((clip) => clip._id !== clipId));
+    } catch (err) {
+      console.error("Failed to delete clip:", err);
+      alert("Failed to delete clip. Please try again.");
+    }
   };
 
   return (
@@ -153,7 +177,7 @@ const Clips = () => {
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
-                      <div className="relative w-20 h-12 rounded-lg overflow-hidden bg-gray-100">
+                      <div className="relative w-20 h-12 rounded-lg overflow-hidden bg-gray-100 cursor-pointer" onClick={() => handlePlay(clip)}>
                         <img
                           src={clip.thumbnail || `https://api.dicebear.com/7.x/shapes/svg?seed=${clip._id}`}
                           alt={clip.title}
@@ -204,12 +228,14 @@ const Clips = () => {
                       <button
                         className="p-2 rounded-full text-gray-500 hover:bg-emerald-100 hover:text-gray-900 transition-all"
                         title="Play"
+                        onClick={() => handlePlay(clip)}
                       >
                         <Play className="w-4 h-4" />
                       </button>
                       <button
                         className="p-2 rounded-full text-gray-500 hover:bg-emerald-100 hover:text-gray-900 transition-all"
                         title="Download"
+                        onClick={() => handleDownload(clip.clipUrl)}
                       >
                         <Download className="w-4 h-4" />
                       </button>
@@ -224,6 +250,13 @@ const Clips = () => {
                         title="Share"
                       >
                         <Share2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        className="p-2 rounded-full text-gray-500 hover:bg-red-100 hover:text-red-600 transition-all"
+                        title="Delete"
+                        onClick={() => handleDeleteClip(clip._id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </td>
@@ -243,12 +276,57 @@ const Clips = () => {
               duration={clip.duration}
               hasSubtitles={true}
               isProcessed={clip.status === "ready"}
-              onPlay={(id) => console.log("Play", id)}
-              onDownload={(id) => console.log("Download", id)}
+              onPlay={() => handlePlay(clip)}
+              onDownload={() => handleDownload(clip.clipUrl)}
               onEdit={(id) => console.log("Edit", id)}
               onShare={(id) => console.log("Share", id)}
+              onDelete={() => handleDeleteClip(clip._id)}
             />
           ))}
+        </div>
+      )}
+
+      {/* Preview Modal */}
+      {previewClip && (
+        <div className="fixed inset-0 bg-black/80 flex flex-col items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm flex items-center justify-between mb-4">
+            <button
+              onClick={() => setPreviewClip(null)}
+              className="flex items-center gap-2 text-white/80 hover:text-white transition-colors font-medium"
+            >
+              <ChevronLeft className="w-5 h-5" />
+              Back
+            </button>
+          </div>
+          <div className="bg-black rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl border border-gray-800 relative">
+            <div className="px-4 py-3 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent absolute top-0 w-full z-10">
+              <h3 className="font-semibold text-white drop-shadow-md truncate">{previewClip.title}</h3>
+              <button
+                onClick={() => setPreviewClip(null)}
+                className="p-2 text-white/80 hover:text-white bg-black/40 hover:bg-black/60 rounded-full backdrop-blur-md transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            {/* 9:16 Vertical Video Aspect Ratio */}
+            <div className="aspect-[9/16] bg-gray-900 flex items-center justify-center relative">
+              {previewClip.clipUrl ? (
+                <video 
+                  src={previewClip.clipUrl} 
+                  controls 
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  crossOrigin="anonymous"
+                  playsInline
+                />
+              ) : (
+                <div className="text-center">
+                  <Play className="w-12 h-12 text-white/30 mx-auto mb-2" />
+                  <p className="text-white/50 text-sm">Video URL not available</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

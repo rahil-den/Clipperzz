@@ -1,0 +1,19 @@
+{
+  "name": "clipperzz-monorepo",
+  "version": "1.0.0",
+  "description": "Monorepo containing Frontend, Backend, and ModelService",
+  "scripts": {
+    "start": "concurrently \"npm run start:frontend\" \"npm run start:backend\" \"npm run start:model\"",
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\" \"npm run dev:model\"",
+    "start:frontend": "cd Frontend && npm run preview",
+    "dev:frontend": "cd Frontend && npm run dev",
+    "start:backend": "cd Backend && npm start",
+    "dev:backend": "cd Backend && npm run dev",
+    "start:model": "cd ModelService && npm start",
+    "dev:model": "cd ModelService && npm run dev",
+    "install:all": "npm install && cd Frontend && npm install && cd ../Backend && npm install && cd ../ModelService && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

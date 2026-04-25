@@ -16,6 +16,21 @@ export const getMySubscription = async (req, res) => {
     }
 };
 
+// @desc    Get all subscription history for current user (all records, newest first)
+// @route   GET /api/subscriptions/me/history
+// @access  Private
+export const getMySubscriptionHistory = async (req, res) => {
+    try {
+        const history = await Subscription.find({ user: req.user._id })
+            .sort({ createdAt: -1 });
+        res.json(history);
+    } catch (error) {
+        console.error("[getMySubscriptionHistory]", error);
+        res.status(500).json({ message: error.message || "Server Error" });
+    }
+};
+
+
 // @desc    Get all subscriptions (admin)
 // @route   GET /api/subscriptions
 // @access  Private / Admin

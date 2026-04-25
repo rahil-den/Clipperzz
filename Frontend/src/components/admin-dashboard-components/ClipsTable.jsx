@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MoreHorizontal, Eye, Flag, Trash2, RefreshCw, X, Play, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { MoreHorizontal, Eye, Flag, Trash2, RefreshCw, X, Play, ChevronLeft, ChevronRight, Loader2, Download } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { AdminButton } from "./AdminButton";
 import { getClips, updateClip, deleteClip } from "../../services/api";
@@ -268,6 +268,7 @@ const ClipsTable = () => {
                                     controls 
                                     className="w-full h-full"
                                     autoPlay
+                                    crossOrigin="anonymous"
                                 />
                             ) : (
                                 <div className="text-center">
@@ -281,17 +282,31 @@ const ClipsTable = () => {
                                 <span className="text-sm text-gray-500">Duration: {previewModal.duration}</span>
                                 {getStatusBadge(previewModal.status)}
                             </div>
-                            <AdminButton 
-                                variant="danger" 
-                                size="sm"
-                                onClick={() => {
-                                    handleDeleteClip(previewModal);
-                                    setPreviewModal(null);
-                                }}
-                            >
-                                <Trash2 className="w-4 h-4" />
-                                Delete Clip
-                            </AdminButton>
+                            <div className="flex gap-2">
+                                <AdminButton 
+                                    variant="primary" 
+                                    size="sm"
+                                    onClick={() => {
+                                        const url = new URL(previewModal.clipUrl);
+                                        url.searchParams.set('dl', '1');
+                                        window.location.href = url.toString();
+                                    }}
+                                >
+                                    <Download className="w-4 h-4" />
+                                    Download
+                                </AdminButton>
+                                <AdminButton 
+                                    variant="danger" 
+                                    size="sm"
+                                    onClick={() => {
+                                        handleDeleteClip(previewModal);
+                                        setPreviewModal(null);
+                                    }}
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                    Delete Clip
+                                </AdminButton>
+                            </div>
                         </div>
                     </div>
                 </div>

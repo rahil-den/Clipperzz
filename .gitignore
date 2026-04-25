@@ -1,0 +1,36 @@
+# ========================
+# Secrets & Environment
+# ========================
+.env
+Frontend/.env
+Backend/.env
+ModelService/.env
+
+# ========================
+# Dependencies
+# ========================
+node_modules/
+Frontend/node_modules/
+Backend/node_modules/
+ModelService/node_modules/
+
+# ========================
+# Build Output (Vite)
+# ========================
+Frontend/dist/
+Frontend/.vite/
+
+# ========================
+# ModelService Temp/Test Files
+# ========================
+ModelService/cookies.txt
+ModelService/formats_output.txt
+ModelService/test_download.mp4
+ModelService/storage/
+
+# ========================
+# OS / Editor Junk
+# ========================
+.DS_Store
+Thumbs.db
+.vscode/

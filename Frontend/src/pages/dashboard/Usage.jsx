@@ -11,7 +11,7 @@ import {
   AlertCircle,
   ArrowUpRight 
 } from "lucide-react";
-import { getAllUsage } from "../../services/api";
+import { getMyUsage } from "../../services/api";
 import { cn } from "../../lib/utils";
 
 const UsageCard = ({ icon: Icon, label, value, total, unit, color = "emerald" }) => {
@@ -76,7 +76,7 @@ const Usage = () => {
             try {
                 // Assuming getAllUsage returns an array of usage records for the user or the admin
                 // For a regular user, it might return just their usage.
-                const data = await getAllUsage();
+                const data = await getMyUsage();
                 // If it's an array, take the first one; otherwise use the object
                 const usage = Array.isArray(data) ? data[0] : data;
                 setUsageData(usage || {});

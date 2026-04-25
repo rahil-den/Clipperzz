@@ -1,181 +1,59 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Eye, EyeOff, ArrowRight, Star, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff, ArrowRight, Star, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 const Login = () => {
     const navigate = useNavigate();
-    const location = useLocation();
-    const { login, loginWithGoogle } = useAuth();
-    const googleBtnRef = useRef(null);
-    const [successMessage] = useState(location.state?.message || "");
-    const [formData, setFormData] = useState({
-        email: "",
-        password: "",
-    });
+    const { login } = useAuth();
+    const [formData, setFormData] = useState({ email: "", password: "" });
     const [showPassword, setShowPassword] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
     const [errors, setErrors] = useState({});
     const [touched, setTouched] = useState({});
     const [isLoading, setIsLoading] = useState(false);
-    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
     const [apiError, setApiError] = useState("");
 
-    // Handle Google credential response
-    const handleGoogleResponse = useCallback(async (response) => {
-        setApiError("");
-        setIsGoogleLoading(true);
-        try {
-            const result = await loginWithGoogle(response.credential);
-            console.log("[Login.jsx] Google Login Successful", result);
-
-            // Redirect based on role
-            if (result.role === "admin" || result.role === "superadmin") {
-                navigate("/admin");
-            } else {
-                navigate("/dashboard");
-            }
-        } catch (error) {
-            console.error("[Login.jsx] Google Login Error:", error);
-            setApiError(error.response?.data?.message || "Google sign-in failed. Please try again.");
-        } finally {
-            setIsGoogleLoading(false);
-        }
-    }, [loginWithGoogle, navigate]);
-
-    // Initialize Google Sign-In
-    useEffect(() => {
-        const initGoogle = () => {
-            if (window.google?.accounts?.id) {
-                window.google.accounts.id.initialize({
-                    client_id: GOOGLE_CLIENT_ID,
-                    callback: handleGoogleResponse,
-                    auto_select: false,
-                    cancel_on_tap_outside: true,
-                });
-            }
-        };
-
-        // Google script might already be loaded
-        if (window.google?.accounts?.id) {
-            initGoogle();
-        } else {
-            // Wait for the script to load
-            const checkInterval = setInterval(() => {
-                if (window.google?.accounts?.id) {
-                    initGoogle();
-                    clearInterval(checkInterval);
-                }
-            }, 100);
-
-            return () => clearInterval(checkInterval);
-        }
-    }, [handleGoogleResponse]);
-
-    // Handle custom Google button click
-    const handleGoogleLogin = () => {
-        if (window.google?.accounts?.id) {
-            window.google.accounts.id.prompt((notification) => {
-                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                    // Fallback: render the official Google button and auto-click
-                    console.log("[Login.jsx] One Tap not available, using renderButton fallback");
-                    if (googleBtnRef.current) {
-                        googleBtnRef.current.innerHTML = "";
-                        window.google.accounts.id.renderButton(googleBtnRef.current, {
-                            type: "standard",
-                            theme: "outline",
-                            size: "large",
-                            text: "continue_with",
-                            shape: "pill",
-                            width: 340,
-                        });
-                        // Auto-click the rendered Google button
-                        setTimeout(() => {
-                            const innerBtn = googleBtnRef.current?.querySelector('[role="button"]')
-                                || googleBtnRef.current?.querySelector('div[aria-labelledby]');
-                            if (innerBtn) innerBtn.click();
-                        }, 300);
-                    }
-                }
-            });
-        } else {
-            setApiError("Google Sign-In is not available. Please refresh the page.");
-        }
-    };
-
-    // Validation functions
+    // Validation
     const validateEmail = (email) => {
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         if (!email) return "Email is required";
-        if (!emailRegex.test(email)) return "Please enter a valid email address";
+        if (!re.test(email)) return "Please enter a valid email address";
         return "";
     };
-
     const validatePassword = (password) => {
         if (!password) return "Password is required";
         if (password.length < 8) return "Password must be at least 8 characters";
         return "";
     };
 
-    // Validate on change
     useEffect(() => {
         const newErrors = {};
-        if (touched.email) {
-            const emailError = validateEmail(formData.email);
-            if (emailError) newErrors.email = emailError;
-        }
-        if (touched.password) {
-            const passwordError = validatePassword(formData.password);
-            if (passwordError) newErrors.password = passwordError;
-        }
+        if (touched.email) { const e = validateEmail(formData.email); if (e) newErrors.email = e; }
+        if (touched.password) { const e = validatePassword(formData.password); if (e) newErrors.password = e; }
         setErrors(newErrors);
     }, [formData, touched]);
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
-
-    const handleBlur = (e) => {
-        setTouched({ ...touched, [e.target.name]: true });
-    };
+    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+    const handleBlur  = (e) => setTouched({ ...touched, [e.target.name]: true });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setApiError("");
-
-        // Touch all fields to show errors
         setTouched({ email: true, password: true });
-
-        // Validate all fields
-        const emailError = validateEmail(formData.email);
+        const emailError    = validateEmail(formData.email);
         const passwordError = validatePassword(formData.password);
-
-        if (emailError || passwordError) {
-            setErrors({
-                email: emailError,
-                password: passwordError,
-            });
-            return;
-        }
+        if (emailError || passwordError) { setErrors({ email: emailError, password: passwordError }); return; }
 
         setIsLoading(true);
         try {
-            const result = await login({
-                email: formData.email,
-                password: formData.password,
-            });
-            console.log("[Login.jsx] Login Successful", result);
-
-            // Redirect based on role
+            const result = await login({ email: formData.email, password: formData.password });
             if (result.role === "admin" || result.role === "superadmin") {
                 navigate("/admin");
             } else {
                 navigate("/dashboard");
             }
         } catch (error) {
-            console.error("[Login.jsx] Login Error:", error);
             setApiError(error.response?.data?.message || "Invalid email or password. Please try again.");
         } finally {
             setIsLoading(false);
@@ -184,27 +62,17 @@ const Login = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center p-6 font-['Satoshi',sans-serif] bg-gradient-to-br from-gray-50 via-white to-emerald-50/30">
-            {/* Decorative Background Elements */}
+            {/* Decorative blobs */}
             <div className="fixed -left-64 -top-64 w-[500px] h-[500px] bg-emerald-200/30 rounded-full blur-[120px]" />
             <div className="fixed -right-64 -bottom-64 w-[500px] h-[500px] bg-emerald-300/20 rounded-full blur-[120px]" />
 
-            {/* Hidden Google button container for fallback rendering */}
-            <div ref={googleBtnRef} className="fixed -left-[9999px] opacity-0 pointer-events-none" aria-hidden="true" />
-
-            {/* Main Card */}
             <div className="relative w-full max-w-4xl bg-white rounded-[32px] shadow-2xl shadow-gray-200/50 overflow-hidden flex">
-                {/* Left Panel - Dark Gradient */}
+                {/* Left Panel */}
                 <div className="hidden md:flex md:w-[45%] relative overflow-hidden">
-                    {/* Gradient Background */}
                     <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" />
-
-                    {/* Decorative Blurs */}
                     <div className="absolute -left-20 top-1/4 w-64 h-64 bg-emerald-500/20 rounded-full blur-[80px]" />
                     <div className="absolute -right-20 bottom-1/4 w-64 h-64 bg-emerald-400/10 rounded-full blur-[80px]" />
-
-                    {/* Content */}
                     <div className="relative z-10 flex flex-col justify-center p-8 lg:p-10">
-                        {/* Logo */}
                         <div className="flex items-center gap-2 mb-6">
                             <div className="w-9 h-9 bg-emerald-500 rounded-xl flex items-center justify-center">
                                 <svg viewBox="0 0 24 24" className="w-5 h-5 text-white" fill="currentColor">
@@ -213,19 +81,9 @@ const Login = () => {
                             </div>
                             <span className="text-lg font-bold text-white">Clipperz</span>
                         </div>
-
-                        {/* Heading */}
-                        <h1 className="text-3xl lg:text-4xl font-bold text-white leading-tight mb-3">
-                            Welcome back
-                        </h1>
-                        <p className="text-gray-400 text-sm mb-8 max-w-xs">
-                            Sign in to continue creating viral clips with AI
-                        </p>
-
-                        {/* Divider */}
+                        <h1 className="text-3xl lg:text-4xl font-bold text-white leading-tight mb-3">Welcome back</h1>
+                        <p className="text-gray-400 text-sm mb-8 max-w-xs">Sign in to continue creating viral clips with AI</p>
                         <div className="w-12 h-0.5 bg-gray-700 mb-6" />
-
-
                         <div className="flex items-center gap-6">
                             <div className="pr-6 border-r border-gray-700">
                                 <p className="text-xl font-bold text-emerald-400">10K+</p>
@@ -244,55 +102,14 @@ const Login = () => {
                     </div>
                 </div>
 
-                {/* Right Panel - Form */}
+                {/* Right Panel */}
                 <div className="flex-1 flex items-center justify-center p-6 lg:p-10">
                     <div className="w-full max-w-sm">
-                        {/* Header */}
                         <div className="mb-6">
                             <h2 className="text-xl font-bold text-gray-900 mb-1">Log in to your account</h2>
                             <p className="text-sm text-gray-500">Enter your credentials to continue</p>
                         </div>
 
-                        {/* Success message from signup redirect */}
-                        {successMessage && (
-                            <div className="flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-700 text-sm mb-4">
-                                <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-                                <span>{successMessage}</span>
-                            </div>
-                        )}
-
-                        {/* Google Button */}
-                        <button
-                            onClick={handleGoogleLogin}
-                            disabled={isGoogleLoading}
-                            className="w-full flex items-center justify-center gap-3 h-11 px-4 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-60 transition-all duration-200"
-                        >
-                            {isGoogleLoading ? (
-                                <>
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    Signing in...
-                                </>
-                            ) : (
-                                <>
-                                    <svg className="w-5 h-5" viewBox="0 0 24 24">
-                                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                                    </svg>
-                                    Continue with Google
-                                </>
-                            )}
-                        </button>
-
-                        {/* Divider */}
-                        <div className="flex items-center gap-4 my-5">
-                            <div className="flex-1 h-px bg-gray-200" />
-                            <span className="text-xs text-gray-400">OR</span>
-                            <div className="flex-1 h-px bg-gray-200" />
-                        </div>
-
-                        {/* Form */}
                         <form onSubmit={handleSubmit} className="space-y-3">
                             {/* Email */}
                             <div>
@@ -304,10 +121,11 @@ const Login = () => {
                                     onChange={handleChange}
                                     onBlur={handleBlur}
                                     placeholder="you@example.com"
-                                    className={`w-full h-11 px-4 text-sm bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.email
-                                        ? "border-red-400 focus:ring-red-500/20 focus:border-red-500"
-                                        : "border-gray-200 focus:ring-emerald-500/20 focus:border-emerald-500"
-                                        }`}
+                                    className={`w-full h-11 px-4 text-sm bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 transition-all ${
+                                        errors.email
+                                            ? "border-red-400 focus:ring-red-500/20 focus:border-red-500"
+                                            : "border-gray-200 focus:ring-emerald-500/20 focus:border-emerald-500"
+                                    }`}
                                 />
                                 {errors.email && (
                                     <div className="flex items-center gap-1.5 mt-1.5 text-red-500">
@@ -321,10 +139,7 @@ const Login = () => {
                             <div>
                                 <div className="flex items-center justify-between mb-1">
                                     <label className="block text-sm font-medium text-gray-700">Password</label>
-                                    <Link
-                                        to="/forgot-password"
-                                        className="text-sm text-emerald-600 font-medium hover:text-emerald-700 transition-colors"
-                                    >
+                                    <Link to="/forgot-password" className="text-sm text-emerald-600 font-medium hover:text-emerald-700 transition-colors">
                                         Forgot password?
                                     </Link>
                                 </div>
@@ -336,10 +151,11 @@ const Login = () => {
                                         onChange={handleChange}
                                         onBlur={handleBlur}
                                         placeholder="Enter your password"
-                                        className={`w-full h-11 px-4 pr-11 text-sm bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.password
+                                        className={`w-full h-11 px-4 pr-11 text-sm bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 transition-all ${
+                                            errors.password
                                                 ? "border-red-400 focus:ring-red-500/20 focus:border-red-500"
                                                 : "border-gray-200 focus:ring-emerald-500/20 focus:border-emerald-500"
-                                            }`}
+                                        }`}
                                     />
                                     <button
                                         type="button"
@@ -357,7 +173,7 @@ const Login = () => {
                                 )}
                             </div>
 
-                            {/* Remember Me */}
+                            {/* Remember me */}
                             <div className="flex items-center gap-2">
                                 <input
                                     type="checkbox"
@@ -371,7 +187,7 @@ const Login = () => {
                                 </label>
                             </div>
 
-                            {/* API Error Message */}
+                            {/* API Error */}
                             {apiError && (
                                 <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm">
                                     <AlertCircle className="w-4 h-4" />
@@ -379,7 +195,7 @@ const Login = () => {
                                 </div>
                             )}
 
-                            {/* Submit Button */}
+                            {/* Submit */}
                             <button
                                 type="submit"
                                 disabled={isLoading}
@@ -387,7 +203,7 @@ const Login = () => {
                             >
                                 {isLoading ? (
                                     <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <CheckCircle2 className="w-4 h-4 animate-spin" />
                                         Logging In...
                                     </>
                                 ) : (
@@ -399,7 +215,6 @@ const Login = () => {
                             </button>
                         </form>
 
-                        {/* Sign Up Link */}
                         <p className="text-center text-sm text-gray-500 mt-5">
                             Don't have an account?{" "}
                             <Link to="/signup" className="text-emerald-600 font-medium hover:text-emerald-700 transition-colors">
@@ -407,16 +222,11 @@ const Login = () => {
                             </Link>
                         </p>
 
-                        {/* Terms - Orange colored */}
                         <p className="text-center text-xs text-gray-400 mt-3">
                             By continuing, you agree to our{" "}
-                            <Link to="/terms" className="text-orange-500 hover:text-orange-600 transition-colors">
-                                Terms of Service
-                            </Link>
+                            <Link to="/terms" className="text-orange-500 hover:text-orange-600 transition-colors">Terms of Service</Link>
                             {" "}and{" "}
-                            <Link to="/privacy" className="text-orange-500 hover:text-orange-600 transition-colors">
-                                Privacy Policy
-                            </Link>
+                            <Link to="/privacy" className="text-orange-500 hover:text-orange-600 transition-colors">Privacy Policy</Link>
                         </p>
                     </div>
                 </div>

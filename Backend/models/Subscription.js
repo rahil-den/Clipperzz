@@ -32,6 +32,11 @@ const subscriptionSchema = new mongoose.Schema(
             type: String,
             default: null,
         },
+        amount: {
+            // Monthly USD amount paid for this plan (0 for starter/free)
+            type: Number,
+            default: 0,
+        },
     },
     { timestamps: true }
 );
