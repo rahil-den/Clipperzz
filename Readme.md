@@ -668,7 +668,9 @@ flowchart TD
 ## 👥 Contributors
 
 - [Rahil](https://github.com/rahil-den)
-- [Sahil](https://github.com/sahilbagban)
+- [Talha](https://github.com/Talha-X-Dev)
+- [Iyan](https://github.com/iyan-devcore)
+- [Kaif](https://github.com/KaifCodes20)
 
 ---
 
