@@ -21,7 +21,6 @@
 - [Backend API](#-backend-api)
 - [Data Models](#-data-models-9-total)
 - [Getting Started](#-getting-started)
-
 - [ER Diagrams](#-er-diagrams)
 - [Contributors](#-contributors)
 
