@@ -21,7 +21,7 @@
 - [Backend API](#-backend-api)
 - [Data Models](#-data-models-9-total)
 - [Getting Started](#-getting-started)
-- [Environment Variables](#-environment-variables)
+
 - [ER Diagrams](#-er-diagrams)
 - [Contributors](#-contributors)
 
@@ -342,59 +342,6 @@ python main.py
 npm install
 npm run dev
 ```
-
----
-
-## 🔐 Environment Variables
-
-### Backend (`Backend/.env`)
-
-```env
-# Server
-PORT=5002
-NODE_ENV=development
-
-# Database
-MONGO_URI=mongodb://localhost:27017/clipperzz
-
-# Auth
-JWT_SECRET=your-super-secret-jwt-key
-JWT_EXPIRES_IN=7d
-
-# Email (Nodemailer — for OTP)
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASS=your-app-password
-
-# Frontend URL (CORS + redirect)
-FRONTEND_URL=http://localhost:5173
-
-# Google OAuth
-GOOGLE_CLIENT_ID=your-google-client-id
-
-# Twilio (SMS OTP)
-TWILIO_SID=your-twilio-account-sid
-TWILIO_TOKEN=your-twilio-auth-token
-TWILIO_NO=+1234567890
-
-# Stripe (Payments)
-STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
-STRIPE_PRICE_PRO=price_your_pro_price_id
-STRIPE_PRICE_ENTERPRISE=price_your_enterprise_price_id
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
-
-# AI Model Service
-MODEL_SERVICE_URL=http://localhost:5001
-```
-
-### Frontend (`Frontend/.env`)
-
-```env
-VITE_API_URL=http://localhost:5002
-VITE_GOOGLE_CLIENT_ID=your-google-client-id
-```
-
-> [!CAUTION]
-> Never commit real secrets or API keys to version control. Keep `.env` files listed in `.gitignore` at all times.
 
 ---
 
