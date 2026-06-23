@@ -52,6 +52,13 @@ Clipperzz is a **full-stack monorepo platform** consisting of three services tha
 
 ---
 
+## 🎬 Workflow Video
+
+Watch the complete end-to-end workflow of Clipperzz in action here:
+[**Click here to watch the Workflow Video**](https://drive.google.com/file/d/1Y2tzoI8nkJUuEcFaBNpi2c_cO9O3iqF7/view)
+
+---
+
 ## 🏗️ Architecture
 
 ```
